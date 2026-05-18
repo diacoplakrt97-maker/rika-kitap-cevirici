@@ -17,13 +17,12 @@ GEMINI_ANAHTARI = "AIzaSyBgLNr74_9wfFqn7lXr6VFrNSptG540AiA"
 # Web sitesinin tasarımı (Maksimum Görünürlük Gece Modu)
 str_web.set_page_config(page_title="Evrensel Yapay Zeka Arşiv ve Analiz Sistemi", layout="centered")
 
-klasor = "C:/Users/LENOVO/OneDrive/Desktop/proje"
-banner_yolu = f"{klasor}/banner.png"
-
-# 🖼️ CANVA'DA YAPTIĞIN O HARİKA DESENLİ RESMİ TÜM SİTENİN ARKASINA GÖMÜYORUZ
+# 🖼️ BULUT UYUMLU ARKA FON: Resmi yerel klasörden değil, doğrudan projenin içinden okutuyoruz
+banner_adi = "banner.png"
 bg_image_html = ""
-if os.path.exists(banner_yolu):
-    with open(banner_yolu, "rb") as image_file:
+
+if os.path.exists(banner_adi):
+    with open(banner_adi, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()
     bg_image_html = f"""
     <style>
@@ -34,12 +33,12 @@ if os.path.exists(banner_yolu):
         background-repeat: no-repeat !important;
         background-attachment: fixed !important;
     }}
-    /* Arka plan resminin yazıları kapatmaması için üzerine %85 şeffaf siyah bir tül çekiyoruz */
+    /* Resmin üzerine %87 şeffaf siyah bir tül çekiyoruz ki yazılar cam gibi okunsun */
     .stApp::before {{
         content: "" !important;
         position: absolute !important;
         top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(11, 15, 20, 0.85) !important;
+        background-color: rgba(11, 15, 20, 0.87) !important;
         z-index: -1 !important;
     }}
     </style>
@@ -55,7 +54,6 @@ str_web.markdown(f"""
     button[data-testid="stActionButtonIcon"] svg, #MainMenu svg, .stActionButtonIcon svg {{ fill: #34d399 !important; color: #34d399 !important; filter: drop-shadow(0px 0px 5px rgba(52, 211, 153, 0.7)) !important; }}
     footer, footer a, div[data-testid="stDecoration"], .viewerBadge_container__16vsn, div[class*="manageApp"], div[class*="viewerBadge"] {{ color: #34d399 !important; font-weight: bold !important; text-shadow: 0px 0px 5px rgba(52, 211, 153, 0.4) !important; }}
     
-    /* Dosya yükleme kutusunun parlayan belirgin hali */
     div[data-testid="stFileUploader"] {{ 
         border: 2px dashed #10b981 !important; 
         border-radius: 12px !important; 
@@ -79,6 +77,8 @@ str_web.markdown(f"""
 # Başlıklar
 str_web.markdown('<p class="ana-baslik">🔬 DİJİTAL ARŞİV LABORATUVARI</p>', unsafe_allow_html=True)
 str_web.markdown('<p class="alt-baslik">✨ Yapay Zekâ Destekli Evrensel Rika, Osmanlıca ve Belge Dönüşüm Platformu</p>', unsafe_allow_html=True)
+
+klasor = "C:/Users/LENOVO/OneDrive/Desktop/proje"
 
 if "okunan_sonuc" not in str_web.session_state:
     str_web.session_state.okunan_sonuc = ""
