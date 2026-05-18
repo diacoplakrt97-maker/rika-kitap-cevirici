@@ -8,42 +8,62 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 # Web sitesinin başlığı ve tasarımı
-str_web.set_page_config(page_title="Rika ve Arapça Yapay Zeka Dönüştürücü", layout="centered")
-str_web.title("📝 Profesyonel Rika ve Arapça Kitap Dönüştürücü")
-str_web.write("Belgenizi yükleyin, yapay zeka okumasını yapın, ekranda düzenleyin ve Word kitabınızı indirin!")
+str_web.set_page_config(page_title="Çok Dilli Yapay Zeka Dönüştürücü", layout="centered")
+str_web.title("📝 Çok Dilli Arşiv ve Kitap Dönüştürücü")
+str_web.write("Belgenizi yükleyin, dilinizi seçin, yapay zeka ile anında şık bir Word kitabına dönüştürün!")
 
 # Sabit klasör yolumuz
 klasor = "C:/Users/LENOVO/OneDrive/Desktop/proje"
 
-# Sitenin hafızasını (Session State) kontrol paneli için hazırlıyoruz
+# Sitenin hafızasını kontrol paneli için hazırlıyoruz
 if "okunan_sonuc" not in str_web.session_state:
     str_web.session_state.okunan_sonuc = ""
 
+# 🌍 YENİ ÖZELLİK: Sitenin en başına şık bir "Dil Seçim Menüsü" ekliyoruz
+str_web.subheader("🌍 1. Dil Ayarını Seçin")
+secilen_dil_adi = str_web.selectbox(
+    "Taramak istediğiniz belgenin dilini seçiniz:",
+    ["Osmanlıca / Arapça (Rika)", "Modern Türkçe", "İngilizce (English)"]
+)
+
+# Seçilen dile göre yapay zekanın anlayacağı resmi kodları belirliyoruz
+if secilen_dil_adi == "Osmanlıca / Arapça (Rika)":
+    dil_kodu = ['ar']
+    rtl_ayari = True  # Sağdan sola yazı düzeni
+elif secilen_dil_adi == "Modern Türkçe":
+    dil_kodu = ['tr']
+    rtl_ayari = False # Soldan sağa yazı düzeni
+else:
+    dil_kodu = ['en']
+    rtl_ayari = False # Soldan sağa yazı düzeni
+
+str_web.markdown("---")
+
 # Bilgisayardan dosya yükleme kutusu
 yuklenen_dosya = str_web.file_uploader(
-    "📌 Lütfen taratmak istediğiniz Rika el yazısı resmini seçin (.jpg, .jpeg, .png, .jfif)", 
+    "📌 2. Lütfen taratmak istediğiniz belge resmini seçin (.jpg, .jpeg, .png, .jfif)", 
     type=["jpg", "jpeg", "png", "jfif"]
 )
 
 if yuklenen_dosya is not None:
     resim = Image.open(yuklenen_dosya)
-    str_web.image(resim, caption="Yüklenen Rika Belgesi", use_container_width=True)
+    str_web.image(resim, caption="Yüklenen Belge", use_container_width=True)
     
     # 🔍 1. AŞAMA: YAPAY ZEKAYI TETİKLEME BUTONU
-    if str_web.button("🔍 1. Adım: Yapay Zeka Taramasını Başlat", type="primary"):
-        with str_web.spinner("⏳ Yapay zeka harfleri derinlemesine çözüyor... Lütfen bekleyin..."):
+    if str_web.button("🔍 2. Adım: Yapay Zeka Taramasını Başlat", type="primary"):
+        with str_web.spinner(f"⏳ Yapay zeka {secilen_dil_adi} harflerini çözüyor... Lütfen bekleyin..."):
             try:
                 gecici_yol = f"{klasor}/gecici_tarama.jpg"
                 resim.save(gecici_yol)
                 
-                okuyucu = easyocr.Reader(['ar'], gpu=False)
+                # Seçtiğimiz dil koduyla yapay zekayı ayağa kaldırıyoruz
+                okuyucu = easyocr.Reader(dil_kodu, gpu=False)
                 sonuc = okuyucu.readtext(gecici_yol, paragraph=True, canvas_size=3000, mag_ratio=2.0)
                 
                 if sonuc:
-                    # Okunan satırları birleştirip sitenin hafızasına kaydediyoruz
                     metinler = []
                     for item in sonuc:
-                        metinler.append(item[1])
+                        metinler.append(item)
                     str_web.session_state.okunan_sonuc = "\n".join(metinler)
                     str_web.success("🎉 Tarama Başarıyla Tamamlandı! Aşağıdaki panelden yazıları kontrol edebilirsiniz.")
                 else:
@@ -54,42 +74,46 @@ if yuklenen_dosya is not None:
             except Exception as e:
                 str_web.error(f"❌ Bir pürüz oluştu: {e}")
 
-    # ✍️ 2. AŞAMA: CANLI DÜZENLEME PANELİ (Yalnızca tarama bittiyse açılır)
+    # ✍️ 2. AŞAMA: CANLI DÜZENLEME PANELİ
     if str_web.session_state.okunan_sonuc:
         str_web.markdown("---")
-        str_web.subheader("✍️ 2. Adım: Metin Düzenleme ve Kontrol Paneli")
-        str_web.write("Yapılan okumayı aşağıdan inceleyebilirsiniz. Eksik veya hatalı yerleri doğrudan kutunun içine tıklayarak klavyenizle düzeltebilirsiniz:")
+        str_web.subheader("✍️ 3. Adım: Metin Düzenleme ve Kontrol Paneli")
         
-        # Kullanıcının ekrandan yazıyı değiştirebileceği akıllı geniş metin kutusu
         duzenlenen_metin = str_web.text_area(
-            "Arapça / Rika Metin İçeriği", 
+            "Metin İçeriği (İhtiyaca göre düzenleyebilirsiniz)", 
             value=str_web.session_state.okunan_sonuc, 
             height=300
         )
         
         # 📄 3. AŞAMA: WORD DOSYASI ÜRETME BUTONU
-        if str_web.button("💾 3. Adım: Son Hali Word Kitabına Çevir", type="secondary"):
+        if str_web.button("💾 4. Adım: Son Hali Word Kitabına Çevir", type="secondary"):
             try:
                 doc = Document()
-                # Kullanıcının eliyle düzelttiği o son güncel metni satır satır Word'e aktarıyoruz
                 for satir in duzenlenen_metin.split('\n'):
                     if satir.strip():
                         paragraf = doc.add_paragraph(satir)
-                        paragraf.paragraph_format.rtl = True
-                        paragraf.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                        
+                        # Seçilen dile göre yazının yönünü ayarlıyoruz (Sağdan sola veya Soldan sağa)
+                        if rtl_ayari:
+                            paragraf.paragraph_format.rtl = True
+                            paragraf.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                            yazi_tipi = 'Traditional Arabic'
+                        else:
+                            paragraf.paragraph_format.rtl = False
+                            paragraf.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                            yazi_tipi = 'Calibri'
+                            
                         for run in paragraf.runs:
-                            run.font.name = 'Traditional Arabic'
-                            run.font.size = 16
+                            run.font.name = yazi_tipi
+                            run.font.size = 14 if not rtl_ayari else 16
                             
                 word_dosya_adi = f"{klasor}/dijital_rika_kitap.docx"
                 doc.save(word_dosya_adi)
                 
-                str_web.success("🏆 KİTABINIZ HAZIR! Son düzenlemelerinizle birlikte Word belgeniz başarıyla güncellendi.")
-                str_web.balloons() # Balonları artık burada uçuruyoruz!
-                str_web.info(f"📁 Masaüstündeki 'proje' klasörünün içine gidip 'dijital_rika_kitap.docx' dosyanızı alabilirsiniz.")
+                str_web.success("🏆 KİTABINIZ HAZIR! Seçtiğiniz dil düzeninde Word belgeniz başarıyla güncellendi.")
+                str_web.balloons()
             except Exception as e:
                 str_web.error(f"❌ Word dosyası üretilirken pürüz çıktı: {e}")
 else:
-    # Resim yoksa sitenin hafızasını sıfırlıyoruz
     str_web.session_state.okunan_sonuc = ""
-    str_web.info("💡 Devam etmek için lütfen yukarıdaki kutuya bir Rika resmi sürükleyin veya seçin.")
+    str_web.info("💡 Devam etmek için lütfen yukarıdaki kutuya bir belge resmi sürükleyin veya seçin.")
