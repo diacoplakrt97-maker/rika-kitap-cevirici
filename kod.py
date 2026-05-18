@@ -17,7 +17,7 @@ GEMINI_ANAHTARI = "AIzaSyBgLNr74_9wfFqn7lXr6VFrNSptG540AiA"
 # Web sitesinin tasarımı (Maksimum Görünürlük Gece Modu)
 str_web.set_page_config(page_title="Evrensel Yapay Zeka Arşiv ve Analiz Sistemi", layout="centered")
 
-# 🖼️ BULUT UYUMLU ARKA FON: Resmi yerel klasörden değil, doğrudan projenin içinden okutuyoruz
+klasor = "C:/Users/LENOVO/OneDrive/Desktop/proje"
 banner_adi = "banner.png"
 bg_image_html = ""
 
@@ -28,12 +28,13 @@ if os.path.exists(banner_adi):
     <style>
     .stApp {{
         background-image: url("data:image/png;base64,{encoded_string}") !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-        background-attachment: fixed !important;
+        /* 🛠️ YAKLAŞTIRMAYI ENGELLEYEN AYARLAR: */
+        background-size: contain !important; /* Resmi orijinal oranlarında tutar, yaklaştırmaz */
+        background-position: top center !important; /* Resmi yukarıya ve ortalara yerleştirir */
+        background-repeat: no-repeat !important; /* Resmin ekranda defalarca tekrarlanmasını önler */
+        background-attachment: scroll !important; /* Sayfa kaydırıldığında resmin doğal hareket etmesini sağlar */
     }}
-    /* Resmin üzerine %87 şeffaf siyah bir tül çekiyoruz ki yazılar cam gibi okunsun */
+    /* Arka plan resminin yazıları kapatmaması için üzerine %87 şeffaf siyah bir tül çekiyoruz */
     .stApp::before {{
         content: "" !important;
         position: absolute !important;
@@ -76,9 +77,7 @@ str_web.markdown(f"""
 
 # Başlıklar
 str_web.markdown('<p class="ana-baslik">🔬 DİJİTAL ARŞİV LABORATUVARI</p>', unsafe_allow_html=True)
-str_web.markdown('<p class="alt-baslik">✨ Yapay Zekâ Destekli Evrensel Rika, Osmanlıca ve Belge Dönüşüm Platformu</p>', unsafe_allow_html=True)
-
-klasor = "C:/Users/LENOVO/OneDrive/Desktop/proje"
+str_web.markdown('<p class="alt-baslik">✨ Yapay Zekâ Destekli Evrensel Rika, Osmanlıca og Belge Dönüşüm Platformu</p>', unsafe_allow_html=True)
 
 if "okunan_sonuc" not in str_web.session_state:
     str_web.session_state.okunan_sonuc = ""
