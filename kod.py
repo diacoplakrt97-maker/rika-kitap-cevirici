@@ -11,7 +11,7 @@ from fpdf import FPDF
 from io import BytesIO
 import google.generativeai as genai
 
-# 🔑 GİZLİ GEMINI ŞİFREN (Aynen korundu)
+# 🔑 GİZLİ GEMINI ŞİFREN (Buraya o kendi AIzaSy... şifreni yapıştır)
 GEMINI_ANAHTARI = "AIzaSyBgLNr74_9wfFqn7lXr6VFrNSptG540AiA"
 
 # Web sitesinin tasarımı (Maksimum Görünürlük Gece Modu)
@@ -20,7 +20,7 @@ str_web.set_page_config(page_title="Evrensel Yapay Zeka Arşiv ve Analiz Sistemi
 klasor = "C:/Users/LENOVO/OneDrive/Desktop/proje"
 banner_yolu = f"{klasor}/banner.png"
 
-# 🖼️ HARİKA YENİ SÜSLEME: Canva resmini şeffaf bir arka fon resmi haline getiriyoruz
+# 🖼️ CANVA'DA YAPTIĞIN O HARİKA DESENLİ RESMİ TÜM SİTENİN ARKASINA GÖMÜYORUZ
 bg_image_html = ""
 if os.path.exists(banner_yolu):
     with open(banner_yolu, "rb") as image_file:
@@ -34,12 +34,12 @@ if os.path.exists(banner_yolu):
         background-repeat: no-repeat !important;
         background-attachment: fixed !important;
     }}
-    /* Arka plan resminin yazıları okunmaz yapmaması için tüm sayfanın üzerine %85 siyah şeffaf bir tül çekiyoruz */
+    /* Arka plan resminin yazıları kapatmaması için üzerine %85 şeffaf siyah bir tül çekiyoruz */
     .stApp::before {{
         content: "" !important;
         position: absolute !important;
         top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(11, 15, 20, 0.85) !important; /* Buradaki 0.85 şeffaflık oranıdır, resmi daha net görmek için 0.70 yapabilirsin */
+        background-color: rgba(11, 15, 20, 0.85) !important;
         z-index: -1 !important;
     }}
     </style>
@@ -54,11 +54,21 @@ str_web.markdown(f"""
     header[data-testid="stHeader"] svg {{ fill: #34d399 !important; color: #34d399 !important; }}
     button[data-testid="stActionButtonIcon"] svg, #MainMenu svg, .stActionButtonIcon svg {{ fill: #34d399 !important; color: #34d399 !important; filter: drop-shadow(0px 0px 5px rgba(52, 211, 153, 0.7)) !important; }}
     footer, footer a, div[data-testid="stDecoration"], .viewerBadge_container__16vsn, div[class*="manageApp"], div[class*="viewerBadge"] {{ color: #34d399 !important; font-weight: bold !important; text-shadow: 0px 0px 5px rgba(52, 211, 153, 0.4) !important; }}
-    div[data-testid="stFileUploader"] {{ border: 2px dashed #10b981 !important; border-radius: 12px !important; background-color: rgba(17, 24, 39, 0.8) !important; padding: 20px !important; box-shadow: 0px 0px 15px rgba(16, 185, 129, 0.1) !important; }}
+    
+    /* Dosya yükleme kutusunun parlayan belirgin hali */
+    div[data-testid="stFileUploader"] {{ 
+        border: 2px dashed #10b981 !important; 
+        border-radius: 12px !important; 
+        background-color: rgba(17, 24, 39, 0.85) !important; 
+        padding: 20px !important; 
+        box-shadow: 0px 0px 15px rgba(16, 185, 129, 0.2) !important; 
+    }}
     div[data-testid="stFileUploader"] section {{ color: #ffffff !important; font-weight: 600 !important; }}
     div[data-testid="stFileUploader"] label p {{ color: #34d399 !important; font-size: 16px !important; font-weight: bold !important; }}
     div[data-testid="stFileUploader"] button {{ background-color: #1f2937 !important; color: #34d399 !important; border: 1px solid #4b5563 !important; font-weight: bold !important; }}
+    
     .stButton>button[kind="primary"] {{ background-color: #0c6145 !important; color: white !important; border-radius: 10px !important; border: 1px solid #10b981 !important; font-weight: bold; font-size: 16px !important; padding: 12px !important; width: 100% !important; }}
+    .stButton>button[kind="secondary"] {{ background-color: #1f2937 !important; color: #34d399 !important; border-radius: 8px !important; border: 1px solid #4b5563 !important; font-weight: bold !important; }}
     .stTextArea>div>div>textarea {{ background-color: rgba(4, 6, 8, 0.9) !important; color: #34d399 !important; border: 1px solid #0c6145 !important; border-radius: 10px !important; font-family: 'Courier New', monospace !important; }}
     .adim-karti {{ background: linear-gradient(135deg, rgba(17, 24, 39, 0.85), rgba(31, 41, 55, 0.85)) !important; padding: 15px !important; border-radius: 10px !important; border: 1px solid #374151 !important; margin-top: 20px !important; margin-bottom: 20px !important; }}
     .ana-baslik {{ font-size: 40px !important; font-weight: 800 !important; color: #34d399 !important; text-shadow: 0px 0px 15px rgba(52, 211, 153, 0.4) !important; text-align: center !important; margin-bottom: 5px !important; }}
@@ -66,7 +76,7 @@ str_web.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# Başlıkları görselin üstüne şıkça yerleştiriyoruz
+# Başlıklar
 str_web.markdown('<p class="ana-baslik">🔬 DİJİTAL ARŞİV LABORATUVARI</p>', unsafe_allow_html=True)
 str_web.markdown('<p class="alt-baslik">✨ Yapay Zekâ Destekli Evrensel Rika, Osmanlıca ve Belge Dönüşüm Platformu</p>', unsafe_allow_html=True)
 
