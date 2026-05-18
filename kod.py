@@ -10,10 +10,10 @@ from fpdf import FPDF
 from io import BytesIO
 import google.generativeai as genai
 
-# 🔑 GİZLİ GEMINI ŞİFREN (Burası aynen korundu)
+# 🔑 GİZLİ GEMINI ŞİFREN (Aynen korundu)
 GEMINI_ANAHTARI = "BURAYA_GOOGLE_AI_STUDIO_SITESINDEN_ALDIGIN_API_KEYI_YAPIŞTIR"
 
-# Web sitesinin tasarımı (Ultra Süslü Gece Modu ve Kurumsal Zümrüt Yeşili)
+# Web sitesinin tasarımı (Süper Belirgin Gece Modu)
 str_web.set_page_config(page_title="Evrensel Yapay Zeka Arşiv ve Analiz Sistemi", layout="centered")
 
 # 🎨 SİTEMİZİ SÜSLEYEN ÖZEL TASARIM KODLARI (CSS)
@@ -24,7 +24,42 @@ str_web.markdown("""
         background-color: #0b0f14 !important;
         color: #f0f4f8 !important;
     }
-    /* Sitedeki ana başlığın parlaması ve süslenmesi */
+    
+    /* 🔴 SAĞ ÜSTTEKİ ÜÇ NOKTA MENÜSÜNÜ YEŞİLE BOYAMA */
+    button[data-testid="stActionButtonIcon"] svg, 
+    #MainMenu svg {
+        fill: #34d399 !important;
+        color: #34d399 !important;
+        filter: drop-shadow(0px 0px 5px rgba(52, 211, 153, 0.6)) !important;
+    }
+
+    /* 🔴 SİLİK DURAN DOSYA YÜKLEME KUTUSUNU PARLATMA VE BELİRGİNLEŞTİRME */
+    div[data-testid="stFileUploader"] {
+        border: 2px dashed #10b981 !important;
+        border-radius: 12px !important;
+        background-color: #111827 !important;
+        padding: 20px !important;
+        box-shadow: 0px 0px 15px rgba(16, 185, 129, 0.1) !important;
+    }
+    /* Yükleme kutusunun içindeki silik yazıları beyaz ve net yapıyoruz */
+    div[data-testid="stFileUploader"] section {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }
+    div[data-testid="stFileUploader"] label p {
+        color: #34d399 !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+    }
+    /* "Browse files" butonunu belirginleştirme */
+    div[data-testid="stFileUploader"] button {
+        background-color: #1f2937 !important;
+        color: #34d399 !important;
+        border: 1px solid #4b5563 !important;
+        font-weight: bold !important;
+    }
+
+    /* Sitedeki ana başlığın parlaması */
     .ana-baslik {
         font-size: 40px !important;
         font-weight: 800 !important;
@@ -50,35 +85,14 @@ str_web.markdown("""
         padding: 12px !important;
         width: 100% !important;
         box-shadow: 0 4px 12px rgba(12, 97, 69, 0.3) !important;
-        transition: all 0.3s ease !important;
     }
-    .stButton>button[kind="primary"]:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5) !important;
-    }
-    /* Diğer butonların şık koyu antrasit tasarımı */
-    .stButton>button[kind="secondary"] {
-        background-color: #1f2937 !important;
-        color: #34d399 !important;
-        border-radius: 8px !important;
-        border: 1px solid #4b5563 !important;
-        font-weight: bold !important;
-    }
-    /* Metin kutusunun etrafına parlayan neon yeşili çerçeve ekliyoruz */
+    /* Metin kutusunun etrafına parlayan neon yeşili çerçeve */
     .stTextArea>div>div>textarea {
         background-color: #040608 !important;
         color: #34d399 !important;
         border: 1px solid #0c6145 !important;
         border-radius: 10px !important;
         font-family: 'Courier New', monospace !important;
-        box-shadow: inset 0px 0px 10px rgba(12, 97, 69, 0.2) !important;
-    }
-    /* Bilgilendirme kartlarının şık antrasit kutular haline getirilmesi */
-    .stAlert {
-        background-color: #111827 !important;
-        color: #e5e7eb !important;
-        border-left: 6px solid #34d399 !important;
-        border-radius: 8px !important;
     }
     /* Adım başlıklarının şık görünmesi için özel alan */
     .adim-karti {
@@ -92,7 +106,7 @@ str_web.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🏛️ SÜSLÜ HOŞ GELDİNİZ LOGOSU VE BAŞLIĞI
+# Başlıklar
 str_web.markdown('<p class="ana-baslik">🔬 DİJİTAL ARŞİV LABORATUVARI</p>', unsafe_allow_html=True)
 str_web.markdown('<p class="alt-baslik">✨ Yapay Zekâ Destekli Evrensel Rika, Osmanlıca ve Belge Dönüşüm Platformu</p>', unsafe_allow_html=True)
 
@@ -113,7 +127,6 @@ if yuklenen_dosya is not None:
     
     str_web.markdown('<div class="adim-karti">🔍 <b>ADIM 2: Yapay Zekâ Analiz Motoru</b><br>Yapay zekanın harfleri ve koordinatları çözmesi için aşağıdaki büyük butona basın.</div>', unsafe_allow_html=True)
     
-    # 🔍 1. AŞAMA: SÜSLÜ ANALİZ BUTONU
     if str_web.button("🚀 GÖRSEL ANALİZİ VE TARAMAYI BAŞLAT", type="primary"):
         with str_web.spinner("⏳ Yapay zekâ mikroskop modunda satırları ve harfleri çözüyor... Lütfen bekleyin..."):
             try:
@@ -148,25 +161,21 @@ if yuklenen_dosya is not None:
             except Exception as e:
                 str_web.error(f"❌ Bir pürüz oluştu: {e}")
 
-    # İşaretli resmi şık çerçeveyle gösteriyoruz
     if "isaretli_resim" in str_web.session_state:
-        str_web.image(str_web.session_state.isaretli_resim, caption="🔍 Yapay Zekanın Okuduğu Yerler (Kırmızı Çerçeveli)", use_container_width=True)
+        str_web.image(str_web.session_state.isaretli_resim, caption="🔍 Yapay Zekanın Okuduğu Yerler", use_container_width=True)
     else:
         str_web.image(resim, caption="Yüklenen Belge Orijinal Hali", use_container_width=True)
 
-    # ✍️ 2. AŞAMA: SÜSLÜ CANLI DÜZENLEME PANELİ
     if str_web.session_state.okunan_sonuc:
         str_web.markdown('<div class="adim-karti">✍️ <b>ADIM 3: Canlı Metin Kontrol ve Düzenleme Ekranı</b><br>Çözülen metinleri aşağıdan inceleyebilirsiniz. Eksik harf varsa üzerine tıklayıp klavyenizle düzeltebilirsiniz.</div>', unsafe_allow_html=True)
         
         duzenlenen_metin = str_web.text_area("", value=str_web.session_state.okunan_sonuc, height=250)
         
-        # 📊 BELGE ANALİZ KARNESİ
         str_web.markdown('<div class="adim-karti">📊 <b>ADIM 4: Yapay Zeka Belge İstatistik Raporu</b></div>', unsafe_allow_html=True)
         tum_kelimeler = duzenlenen_metin.split()
         toplam_kelime_sayisi = len(tum_kelimeler)
         str_web.metric(label="🔢 Toplam Çözülen Kelime Sayısı", value=f"{toplam_kelime_sayisi} Kelime")
 
-        # 🤖 GEMINI TERCÜME ALANI
         str_web.markdown('<div class="adim-karti">🤖 <b>ADIM 5: Akademik Türkçe Tercüme Paneli</b><br>Eski metni Google Gemini AI kullanarak günümüz kütüphane diline çevirmek için basın.</div>', unsafe_allow_html=True)
         if str_web.button("🧠 Metni Google Gemini AI ile Türkçeye Çevir", type="secondary"):
             with str_web.spinner("⏳ Google Gemini dev yapay zekâ beyni metni analiz ediyor..."):
@@ -174,7 +183,7 @@ if yuklenen_dosya is not None:
                     genai.configure(api_key=GEMINI_ANAHTARI)
                     model = genai.GenerativeModel('gemini-1.5-flash')
                     emir = (
-                        "Sen uzman bir Osmanlı tarihçisi, arşiv uzmanı ve dil bilimcisin. "
+                        "Sen uzman bir Osmanlı tarihçisi, arşiv uzmanı og dil bilimcisin. "
                         "Sana verilen Arap alfabesiyle yazılmış metni satır satır incele. "
                         "Metnin günümüz Latin harfli akıcı, anlaşılır ve akademik kütüphane Türkçesiyle tam anlam çevirisini yap."
                     )
@@ -187,10 +196,8 @@ if yuklenen_dosya is not None:
         if str_web.session_state.tercüme_sonuc:
             str_web.info(str_web.session_state.tercüme_sonuc)
 
-        # İNDİRME ALANI
         str_web.markdown('<div class="adim-karti">📥 <b>ADIM 6: Dijital Kitabınızı İndirin</b><br>Hazırlanan bu eseri cihazınıza tek tıkla şık formatlarda indirebilirsiniz.</div>', unsafe_allow_html=True)
         
-        # WORD BUTONU
         try:
             doc = Document()
             for satir in duzenlenen_metin.split('\n'):
@@ -216,7 +223,6 @@ if yuklenen_dosya is not None:
             str_web.download_button(label="📥 Word Kitabı (.docx) Olarak İndir", data=b_word, file_name="dijital_arsiv_kitabi.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
         except: pass
 
-        # PDF BUTONU
         try:
             pdf = FPDF()
             pdf.add_page()
