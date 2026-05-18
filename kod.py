@@ -28,7 +28,7 @@ secilen_dil_adi = str_web.selectbox(
 
 # Seçilen dile göre yapay zekanın anlayacağı resmi kodları belirliyoruz
 if secilen_dil_adi == "Osmanlıca / Arapça (Rika)":
-    dil_kodu = ['ar']
+    dil_kodu = ['ar', 'fa', 'ug']
     rtl_ayari = True  # Sağdan sola yazı düzeni
 elif secilen_dil_adi == "Modern Türkçe":
     dil_kodu = ['tr']
