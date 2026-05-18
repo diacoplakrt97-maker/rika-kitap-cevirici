@@ -13,10 +13,10 @@ import google.generativeai as genai
 # 🔑 GİZLİ GEMINI ŞİFREN (Aynen korundu)
 GEMINI_ANAHTARI = "BURAYA_GOOGLE_AI_STUDIO_SITESINDEN_ALDIGIN_API_KEYI_YAPIŞTIR"
 
-# Web sitesinin tasarımı (Süper Belirgin Gece Modu)
+# Web sitesinin tasarımı (Maksimum Görünürlük Gece Modu)
 str_web.set_page_config(page_title="Evrensel Yapay Zeka Arşiv ve Analiz Sistemi", layout="centered")
 
-# 🎨 SİTEMİZİ SÜSLEYEN ÖZEL TASARIM KODLARI (CSS)
+# 🎨 SİTEMİZDEKİ TÜM SİLİK VE GİZLİ ALANLARI PARLATAN CSS KODLARI
 str_web.markdown("""
     <style>
     /* Arka plan ve genel yazı renkleri */
@@ -25,15 +25,43 @@ str_web.markdown("""
         color: #f0f4f8 !important;
     }
     
-    /* 🔴 SAĞ ÜSTTEKİ ÜÇ NOKTA MENÜSÜNÜ YEŞİLE BOYAMA */
-    button[data-testid="stActionButtonIcon"] svg, 
-    #MainMenu svg {
+    /* 🟢 1. "SHARE" BUTONU VE ÜST BARDAKİ TÜM GİZLİ YAZILARI PARLATMA */
+    header[data-testid="stHeader"] button, 
+    header[data-testid="stHeader"] div,
+    header[data-testid="stHeader"] span,
+    header[data-testid="stHeader"] a {
+        color: #34d399 !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
+        text-shadow: 0px 0px 5px rgba(52, 211, 153, 0.5) !important;
+    }
+    header[data-testid="stHeader"] svg {
         fill: #34d399 !important;
         color: #34d399 !important;
-        filter: drop-shadow(0px 0px 5px rgba(52, 211, 153, 0.6)) !important;
     }
 
-    /* 🔴 SİLİK DURAN DOSYA YÜKLEME KUTUSUNU PARLATMA VE BELİRGİNLEŞTİRME */
+    /* 🟢 2. SAĞ ÜSTTEKİ ÜÇ NOKTA MENÜSÜ VE TÜM AKSİYON SİMGELERİ */
+    button[data-testid="stActionButtonIcon"] svg, 
+    #MainMenu svg,
+    .stActionButtonIcon svg {
+        fill: #34d399 !important;
+        color: #34d399 !important;
+        filter: drop-shadow(0px 0px 5px rgba(52, 211, 153, 0.7)) !important;
+    }
+
+    /* 🟢 3. SAĞ ALTTAKİ SİLİK "MANAGE APP" VE STREAMLIT LOGO/YAZILARI */
+    footer, 
+    footer a, 
+    div[data-testid="stDecoration"],
+    .viewerBadge_container__16vsn,
+    div[class*="manageApp"],
+    div[class*="viewerBadge"] {
+        color: #34d399 !important;
+        font-weight: bold !important;
+        text-shadow: 0px 0px 5px rgba(52, 211, 153, 0.4) !important;
+    }
+
+    /* 🟢 4. DOSYA YÜKLEME KUTUSUNU GÜÇLENDİRME */
     div[data-testid="stFileUploader"] {
         border: 2px dashed #10b981 !important;
         border-radius: 12px !important;
@@ -41,7 +69,6 @@ str_web.markdown("""
         padding: 20px !important;
         box-shadow: 0px 0px 15px rgba(16, 185, 129, 0.1) !important;
     }
-    /* Yükleme kutusunun içindeki silik yazıları beyaz ve net yapıyoruz */
     div[data-testid="stFileUploader"] section {
         color: #ffffff !important;
         font-weight: 600 !important;
@@ -51,7 +78,6 @@ str_web.markdown("""
         font-size: 16px !important;
         font-weight: bold !important;
     }
-    /* "Browse files" butonunu belirginleştirme */
     div[data-testid="stFileUploader"] button {
         background-color: #1f2937 !important;
         color: #34d399 !important;
@@ -59,7 +85,7 @@ str_web.markdown("""
         font-weight: bold !important;
     }
 
-    /* Sitedeki ana başlığın parlaması */
+    /* Ana başlık stili */
     .ana-baslik {
         font-size: 40px !important;
         font-weight: 800 !important;
@@ -74,19 +100,17 @@ str_web.markdown("""
         font-size: 16px !important;
         margin-bottom: 30px !important;
     }
-    /* 1. Adım butonunun parlayan zümrüt yeşili tasarımı */
+    /* Buton ve metin alanı düzenlemeleri */
     .stButton>button[kind="primary"] {
         background-color: #0c6145 !important;
         color: white !important;
         border-radius: 10px !important;
         border: 1px solid #10b981 !important;
-        font-weight: bold !important;
+        font-weight: bold;
         font-size: 16px !important;
         padding: 12px !important;
         width: 100% !important;
-        box-shadow: 0 4px 12px rgba(12, 97, 69, 0.3) !important;
     }
-    /* Metin kutusunun etrafına parlayan neon yeşili çerçeve */
     .stTextArea>div>div>textarea {
         background-color: #040608 !important;
         color: #34d399 !important;
@@ -94,7 +118,6 @@ str_web.markdown("""
         border-radius: 10px !important;
         font-family: 'Courier New', monospace !important;
     }
-    /* Adım başlıklarının şık görünmesi için özel alan */
     .adim-karti {
         background: linear-gradient(135deg, #111827, #1f2937) !important;
         padding: 15px !important;
@@ -108,7 +131,7 @@ str_web.markdown("""
 
 # Başlıklar
 str_web.markdown('<p class="ana-baslik">🔬 DİJİTAL ARŞİV LABORATUVARI</p>', unsafe_allow_html=True)
-str_web.markdown('<p class="alt-baslik">✨ Yapay Zekâ Destekli Evrensel Rika, Osmanlıca ve Belge Dönüşüm Platformu</p>', unsafe_allow_html=True)
+str_web.markdown('<p class="alt-baslik">✨ Yapay Zekâ Destekli Evrensel Rika, Osmanlıca og Belge Dönüşüm Platformu</p>', unsafe_allow_html=True)
 
 klasor = "C:/Users/LENOVO/OneDrive/Desktop/proje"
 
@@ -117,7 +140,6 @@ if "okunan_sonuc" not in str_web.session_state:
 if "tercüme_sonuc" not in str_web.session_state:
     str_web.session_state.tercüme_sonuc = ""
 
-# Şık tasarımlı dosya yükleme kutusu alanı
 str_web.markdown('<div class="adim-karti">📂 <b>ADIM 1: Belge Yükleme Paneli</b><br>Arşivlemek istediğiniz Rika el yazısı veya karışık dilli resminizi buraya bırakın.</div>', unsafe_allow_html=True)
 
 yuklenen_dosya = str_web.file_uploader("", type=["jpg", "jpeg", "png", "jfif"])
@@ -125,7 +147,7 @@ yuklenen_dosya = str_web.file_uploader("", type=["jpg", "jpeg", "png", "jfif"])
 if yuklenen_dosya is not None:
     resim = Image.open(yuklenen_dosya)
     
-    str_web.markdown('<div class="adim-karti">🔍 <b>ADIM 2: Yapay Zekâ Analiz Motoru</b><br>Yapay zekanın harfleri ve koordinatları çözmesi için aşağıdaki büyük butona basın.</div>', unsafe_allow_html=True)
+    str_web.markdown('<div class="adim-karti">🔍 <b>ADIM 2: Yapay Zekâ Analiz Motoru</b><br>Yapay zekanın harfleri og koordinatları çözmesi için aşağıdaki büyük butona basın.</div>', unsafe_allow_html=True)
     
     if str_web.button("🚀 GÖRSEL ANALİZİ VE TARAMAYI BAŞLAT", type="primary"):
         with str_web.spinner("⏳ Yapay zekâ mikroskop modunda satırları ve harfleri çözüyor... Lütfen bekleyin..."):
