@@ -8,13 +8,13 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from fpdf import FPDF
 from io import BytesIO
-from google import genai
+import google.generativeai as genai  # Bulut sunucusunda tam kararlı çalışan Google AI motoru
 
 # 🔑 GİZLİ ŞİFRE YERİ TAM BURASI! 
-# Aşağıdaki tırnakların içini tamamen sil ve o kopyaladığın AIzaSy... şifreni buraya yapıştır:
+# Aşağıdaki tırnakların içine o kopyaladığın AIzaSy... şifreni yeniden yapıştır:
 GEMINI_ANAHTARI = "AIzaSyBgLNr74_9wfFqn7lXr6VFrNSptG540AiA"
 
-# Web sitesinin tasarımı (Kalıcı Gece Modu ve Zümrüt Yeşili)
+# Web sitesinin tasarımı (Kalıcı Gece Modu)
 str_web.set_page_config(page_title="Evrensel Yapay Zeka Arşiv ve Canlı Tercüme Asistanı", layout="centered")
 str_web.markdown("""
     <style>
@@ -98,17 +98,18 @@ if yuklenen_dosya is not None:
         if str_web.button("🤖 4. Adım: Metni Google Gemini AI ile Türkçeye Çevir", type="secondary"):
             with str_web.spinner("⏳ Google Gemini dev dil modeli metni analiz edip günümüz Türkçesine çeviriyor..."):
                 try:
-                    client = genai.Client(api_key=GEMINI_ANAHTARI)
+                    # Kararlı sürümün API anahtarı bağlantısı
+                    genai.configure(api_key=GEMINI_ANAHTARI)
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    
                     emir = (
                         "Sen uzman bir Osmanlı tarihçisi, arşiv uzmanı ve dil bilimcisin. "
                         "Sana verilen Arap alfabesiyle yazılmış (Osmanlıca, Arapça veya Farsça karışık) metni satır satır incele. "
                         "Metnin günümüz Latin harfli akıcı, anlaşılır ve akademik kütüphane Türkçesiyle tam anlam çevirisini yap. "
                         "Varsa içindeki tarihi, hukuki terimleri de açıkla."
                     )
-                    response = client.models.generate_content(
-                        model='gemini-2.5-flash',
-                        contents=[emir, duzenlenen_metin]
-                    )
+                    
+                    response = model.generate_content([emir, duzenlenen_metin])
                     str_web.session_state.tercüme_sonuc = f"🤖 [GOOGLE GEMINI AI TERCÜME RAPORU]\n\n{response.text}"
                     str_web.success("🎉 Gemini Yapay Zeka tercümesi başarıyla tamamlandı!")
                 except Exception as e:
