@@ -11,6 +11,7 @@ import json
 from PIL import Image, ImageEnhance 
 import google.generativeai as genai 
 import streamlit as st  
+import pandas as pd        # Harita koordinat verilerini işlemek için eklendi [dynamic-map]
 from docx import Document  
 from fpdf import FPDF  
 from io import BytesIO     
@@ -129,7 +130,6 @@ st.markdown(f"""
         margin-top: 145px !important; 
     }}
     
-    /* 📖 Sözlük Kelime Kutuları Tasarımı */
     .sozluk-kart {{
         background: rgba(16, 185, 129, 0.1) !important;
         border-left: 4px solid #10b981 !important;
@@ -219,7 +219,7 @@ if yuklenen_dosya is not None:
                 
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                # 🛠️ PROMPT GÜNCELLENDİ: Yapay zekaya sözlük/lügat üretme emri eklendi
+                # 🛠️ PROMPT GÜNCELLENDİ: Yapay zekaya harita koordinatı üretme talimatı verildi [dynamic-map]
                 prompt = f"""Sen Osmanlı dönemi arşivleri ve paleografi alanında uzman kıdemli bir bilgi bilimcisin. 
                 Sana sunulan bu tarihi el yazması veya matbu belgeyi analiz et ve şu protokolleri yerine getir:
                 
@@ -232,12 +232,15 @@ if yuklenen_dosya is not None:
                      "tarih_miladi": "Dönüştürülmüş Miladi takvim karşılığı",
                      "sahislar": ["Metinde adı veya unvanı geçen önemli tarihi kişiler"],
                      "yerler": ["Metinde adı geçen coğrafi konumlar veya bölgeler"],
+                     "koordinatlar": [
+                        {{"yer_adi": "İstanbul", "lat": 41.0082, "lon": 28.9784}}
+                     ],
                      "ozet": "Belgenin ana konusunu anlatan tek cümlelik Türkçe özet",
                      "sozluk": {{
-                        "agir_kelime_1": "günümüz_turkcesi_anlami",
-                        "agir_kelime_2": "günümüz_turkcesi_anlami"
+                        "agir_kelime_1": "günümüz_turkcesi_anlami"
                      }}
                    }}
+                ÖNEMLİ: 'koordinatlar' kısmına metinde adı geçen her yerin günümüz dünya coğrafyasındaki tahmini enlem (lat) ve boylam (lon) sayısal değerlerini doğruca ekle. Yer yoksa boş bırak.
                 OCR motorundan gelen kaba kelime ipuçları: '{ocr_metni}'. Maksimum doğruluğa ulaşmak için görsel bağlam ile bu ipuçlarını harmanla."""
                 
                 response = model.generate_content([prompt, resim_islem])
@@ -298,7 +301,7 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["metin"] = yeni_duzenleme
 
     if aktif_analiz:
-        st.markdown('<div class="adim-karti">📊 <b>ADIM 3: Tarihsel Veri ve Arşiv Kataloğu</b></div>', unsafe_allow_html=True)
+        st.markdown('<div class="adim-karti">📊 <b>ADIM 3: Tarihsel Veri ve Coğrafi Harita Analizi</b></div>', unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns(3)
         c1.metric("📜 Belge Sınıflandırması", aktif_analiz.get("belge_turu", "Bilinmiyor"))
@@ -309,22 +312,38 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         st.markdown(f"💡 **Yönetici Özeti:** *{aktif_analiz.get('ozet', 'Özet mevcut değil.')}*")
         st.write("")
         
-        col_sahis, col_yer = st.columns(2)
-        with col_sahis:
+        # 🗺️ YENİ ÖZELLİK: İNTERAKTİF COĞRAFİ HARİTA ENTEGRASYONU [dynamic-map]
+        col_metadata, col_harita = st.columns(2)
+        
+        with col_metadata:
             st.write("👥 **Belirlenen Tarihi Kişiler / Unvanlar:**")
             st.write(", ".join(aktif_analiz.get("sahislar", [])) if aktif_analiz.get("sahislar") else "Kişi adı ayıklanamadı.")
-        with col_yer:
+            st.write("")
             st.write("📍 **Ayıklanan Coğrafi Konumlar:**")
             st.write(", ".join(aktif_analiz.get("yerler", [])) if aktif_analiz.get("yerler") else "Konum bilgisi ayıklanamadı.")
+            
+        with col_harita:
+            st.write("🗺️ **İnteraktif Belge Haritası**")
+            koord_listesi = aktif_analiz.get("koordinatlar", [])
+            
+            if koord_listesi and isinstance(koord_listesi, list):
+                try:
+                    # Gelen JSON verilerini Pandas DataFrame yapısına çeviriyoruz [dynamic-map]
+                    harita_df = pd.DataFrame(koord_listesi)
+                    # Sütun isimlerini Streamlit'in harita modülünün anladığı 'latitude' ve 'longitude' isimlerine çeviriyoruz [dynamic-map]
+                    harita_df = harita_df.rename(columns={{"lat": "latitude", "lon": "longitude"}})
+                    # Haritayı ekrana yerleştiriyoruz [dynamic-map]
+                    st.map(harita_df, zoom=4)
+                except:
+                    st.info("Harita verileri grafikleştirilirken bir pürüz oluştu.")
+            else:
+                st.info("Bu belgede haritalandırılacak coğrafi bir konum bulunamadı.")
 
-        # ==============================================================================
-        # 📖 7.5 YENİ ÖZELLİK: İNTERAKTİF PALEOGRAFİ SÖZLÜĞÜ (KAMUS)
-        # ==============================================================================
+        # ADIM 3.5: YAPAY ZEKÂ PALEOGRAFİ SÖZLÜĞÜ
         st.markdown('<div class="adim-karti">📖 <b>ADIM 3.5: Yapay Zekâ Paleografi Sözlüğü (Akıllı Lügat)</b><br>Belge metninde geçen ağır, arkaik terimlerin günümüz Türkçesi karşılıkları:</div>', unsafe_allow_html=True)
         
         aktif_sozluk = aktif_analiz.get("sozluk", {})
         if aktif_sozluk and isinstance(aktif_sozluk, dict):
-            # Sözlük kelimelerini iki şık sütunda listeliyoruz
             col_soz1, col_soz2 = st.columns(2)
             for i, (osmanlica_kelime, modern_anlam) in enumerate(aktif_sozluk.items()):
                 hedef_kolon = col_soz1 if i % 2 == 0 else col_soz2

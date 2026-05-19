@@ -4,3 +4,4 @@ python-docx
 Pillow
 fpdf2
 google-generativeai
+pandas
