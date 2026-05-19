@@ -11,7 +11,7 @@ import json
 from PIL import Image, ImageEnhance 
 import google.generativeai as genai 
 import streamlit as st  
-import pandas as pd        # Harita koordinat verilerini işlemek için eklendi [dynamic-map]
+import pandas as pd        
 from docx import Document  
 from fpdf import FPDF  
 from io import BytesIO     
@@ -25,7 +25,7 @@ else:
 st.set_page_config(page_title="PalaeoLab AI - Evrensel Arşiv ve Analiz Sistemi", layout="wide")
 
 # ==============================================================================
-# 🎨 2. PREMIUM GÖRSEL TASARIM VE CAM EFEKTLERİ (CSS KATMANI)
+# 🎨 2. PREMIUM GÖRSEL TASARIM VE GİZLEME AYARLARI (CSS KATMANI)
 # ==============================================================================
 banner_adi = "banner.png"
 bg_image_html = ""
@@ -57,6 +57,12 @@ st.markdown(f"""
     
     h1, h2, h3, p, label {{ font-family: 'Inter', sans-serif !important; color: #ffffff !important; }}
     .main .block-container {{ padding-top: 160px !important; }}
+    
+    /* 🧪 🚨 SAĞ ÜSTTEKİ İNGİLİZCE MENÜYÜ VE FOOTER'I GİZLEME (CRITICAL FIX) */
+    #MainMenu, header[data-testid="stHeader"], footer, div[data-testid="stDecoration"] {{
+        visibility: hidden !important;
+        display: none !important;
+    }}
     
     .adim-karti {{ 
         background: rgba(13, 20, 32, 0.85) !important; 
@@ -219,7 +225,6 @@ if yuklenen_dosya is not None:
                 
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                # 🛠️ PROMPT GÜNCELLENDİ: Yapay zekaya harita koordinatı üretme talimatı verildi [dynamic-map]
                 prompt = f"""Sen Osmanlı dönemi arşivleri ve paleografi alanında uzman kıdemli bir bilgi bilimcisin. 
                 Sana sunulan bu tarihi el yazması veya matbu belgeyi analiz et ve şu protokolleri yerine getir:
                 
@@ -312,7 +317,6 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         st.markdown(f"💡 **Yönetici Özeti:** *{aktif_analiz.get('ozet', 'Özet mevcut değil.')}*")
         st.write("")
         
-        # 🗺️ YENİ ÖZELLİK: İNTERAKTİF COĞRAFİ HARİTA ENTEGRASYONU [dynamic-map]
         col_metadata, col_harita = st.columns(2)
         
         with col_metadata:
@@ -328,18 +332,14 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
             
             if koord_listesi and isinstance(koord_listesi, list):
                 try:
-                    # Gelen JSON verilerini Pandas DataFrame yapısına çeviriyoruz [dynamic-map]
                     harita_df = pd.DataFrame(koord_listesi)
-                    # Sütun isimlerini Streamlit'in harita modülünün anladığı 'latitude' ve 'longitude' isimlerine çeviriyoruz [dynamic-map]
-                    harita_df = harita_df.rename(columns={{"lat": "latitude", "lon": "longitude"}})
-                    # Haritayı ekrana yerleştiriyoruz [dynamic-map]
+                    harita_df = harita_df.rename(columns={"lat": "latitude", "lon": "longitude"})
                     st.map(harita_df, zoom=4)
                 except:
                     st.info("Harita verileri grafikleştirilirken bir pürüz oluştu.")
             else:
                 st.info("Bu belgede haritalandırılacak coğrafi bir konum bulunamadı.")
 
-        # ADIM 3.5: YAPAY ZEKÂ PALEOGRAFİ SÖZLÜĞÜ
         st.markdown('<div class="adim-karti">📖 <b>ADIM 3.5: Yapay Zekâ Paleografi Sözlüğü (Akıllı Lügat)</b><br>Belge metninde geçen ağır, arkaik terimlerin günümüz Türkçesi karşılıkları:</div>', unsafe_allow_html=True)
         
         aktif_sozluk = aktif_analiz.get("sozluk", {})
@@ -356,7 +356,6 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         else:
             st.info("Bu belgede sözlüğe eklenecek ağır veya yabancı bir terim tespit edilemedi.")
 
-        # ADIM 4: RAPORLAMA VE DIŞA AKTARIM
         st.markdown('<div class="adim-karti">💾 <b>ADIM 4: Dışa Aktarım ve Sertifikalı Çıktı Motoru</b><br>Raporlarınızı kurumsal formatlarda bilgisayarınıza kaydedin.</div>', unsafe_allow_html=True)
         
         col_word, col_pdf = st.columns(2)
