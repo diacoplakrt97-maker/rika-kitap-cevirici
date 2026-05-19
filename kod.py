@@ -190,11 +190,14 @@ def docx_uret(metin):
     return b_io.getvalue()
 
 def pdf_uret(metin):
+    """Gelişmiş Alan Hatalarından Arındırılmış fpdf2 Motoru"""
     pdf = FPDF()
     pdf.add_page()
+    
     pdf.set_font("helvetica", style="B", size=16)
     pdf.cell(0, 10, "PalaeoLab AI - Analiz Raporu", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(5)
+    
     pdf.set_font("helvetica", style="B", size=10)
     pdf.cell(0, 5, "Sistem: Evrensel Arsiv ve Analiz Katmani", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(10)
@@ -208,18 +211,17 @@ def pdf_uret(metin):
     for kaynak, hedef in turkce_harfler.items():
         temiz_metin = temiz_metin.replace(kaynak, hedef)
         
+    # Hata veren multi_cell yerine sığma problemi yaratmayan otomatik write yapısı kuruldu
     for satir in temiz_metin.split('\n'):
         if satir.strip() == "":
             pdf.ln(4)
         else:
-            pdf.multi_cell(0, 7, satir)
+            pdf.write(7, satir + '\n')
     return pdf.output()
 
-# 🛠️ GÜVENLİ VE UYUMLU DİL PARAMETRELİ OCR MOTORU
 @st.cache_resource(max_entries=1)
 def ocr_model_yukle():
     gpu_katilimi = torch.cuda.is_available()
-    # Arapça modeli için ['ar', 'en'] zorunluluğu sağlandı
     return easyocr.Reader(['ar', 'en'], gpu=gpu_katilimi)
 
 with st.sidebar:
