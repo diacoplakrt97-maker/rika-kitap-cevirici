@@ -85,7 +85,6 @@ st.markdown(f"""
         box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5) !important;
     }}
     
-    /* 📂 SİLİK DOSYA YÜKLEME ALANINI PARLATAN SİHİRLİ CSS YAPISI */
     div[data-testid="stFileUploader"] {{ 
         border: 2px dashed #10b981 !important; 
         border-radius: 14px !important; 
@@ -93,17 +92,14 @@ st.markdown(f"""
         padding: 30px !important; 
         box-shadow: 0 4px 20px 0 rgba(16, 185, 129, 0.1) !important;
     }}
-    /* İçerideki tüm silik gri yazıları fildişi beyazı yapar */
     div[data-testid="stFileUploader"] div, div[data-testid="stFileUploader"] span {{ 
         color: #f1f5f9 !important; 
         font-weight: 500 !important;
     }}
-    /* Dosya yükleme ikonunu parlak neon yeşile boyar */
     div[data-testid="stFileUploader"] svg {{ 
         fill: #34d399 !important; 
         transform: scale(1.1);
     }}
-    /* Alttaki küçük limit ve format yazılarını okunabilir yapar */
     div[data-testid="stFileUploader"] small {{ 
         color: #a7f3d0 !important; 
         font-weight: bold !important;
@@ -219,10 +215,12 @@ def pdf_uret(metin):
             pdf.multi_cell(0, 7, satir)
     return pdf.output()
 
+# 🛠️ GÜVENLİ VE UYUMLU DİL PARAMETRELİ OCR MOTORU
 @st.cache_resource(max_entries=1)
 def ocr_model_yukle():
     gpu_katilimi = torch.cuda.is_available()
-    return easyocr.Reader(['tr', 'ar'], gpu=gpu_katilimi)
+    # Arapça modeli için ['ar', 'en'] zorunluluğu sağlandı
+    return easyocr.Reader(['ar', 'en'], gpu=gpu_katilimi)
 
 with st.sidebar:
     st.markdown("### 🗄️ Laboratuvar Arşivi")
