@@ -25,7 +25,7 @@ else:
 st.set_page_config(page_title="PalaeoLab AI - Evrensel Arşiv ve Analiz Sistemi", layout="wide")
 
 # ==============================================================================
-# 🎨 2. PREMIUM GÖRSEL TASARIM VE GİZLEME AYARLARI (CSS KATMANI)
+# 🎨 2. PREMIUM GÖRSEL TASARIM VE CAM EFEKTLERİ (CSS KATMANI)
 # ==============================================================================
 banner_adi = "banner.png"
 bg_image_html = ""
@@ -58,11 +58,13 @@ st.markdown(f"""
     h1, h2, h3, p, label {{ font-family: 'Inter', sans-serif !important; color: #ffffff !important; }}
     .main .block-container {{ padding-top: 160px !important; }}
     
-    /* 🧪 🚨 SAĞ ÜSTTEKİ İNGİLİZCE MENÜYÜ VE FOOTER'I GİZLEME (CRITICAL FIX) */
-    #MainMenu, header[data-testid="stHeader"], footer, div[data-testid="stDecoration"] {{
-        visibility: hidden !important;
-        display: none !important;
+    /* 🛠️ SAĞ ÜSTTEKİ MENÜYÜ YEŞİL YAPMA VE REKLAMLARI GİZLEME */
+    header[data-testid="stHeader"] button, header[data-testid="stHeader"] div {{ 
+        color: #34d399 !important; 
+        font-weight: bold !important; 
     }}
+    header[data-testid="stHeader"] svg {{ fill: #34d399 !important; }}
+    footer, div[data-testid="stDecoration"] {{ visibility: hidden !important; display: none !important; }}
     
     .adim-karti {{ 
         background: rgba(13, 20, 32, 0.85) !important; 
