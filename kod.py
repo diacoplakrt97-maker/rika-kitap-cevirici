@@ -190,7 +190,7 @@ def docx_uret(metin):
     return b_io.getvalue()
 
 def pdf_uret(metin):
-    """Gelişmiş Alan Hatalarından Arındırılmış fpdf2 Motoru"""
+    """Encoding Hatalarından Arındırılmış Unicode Güvenli PDF Motoru"""
     pdf = FPDF()
     pdf.add_page()
     
@@ -203,6 +203,7 @@ def pdf_uret(metin):
     pdf.ln(10)
     pdf.set_font("helvetica", size=11)
     
+    # Türkçe harf dönüşüm eşlemesi
     turkce_harfler = {
         'ı': 'i', 'ğ': 'g', 'ü': 'u', 'ş': 's', 'ö': 'o', 'ç': 'c',
         'İ': 'I', 'Ğ': 'G', 'Ü': 'U', 'Ş': 'S', 'Ö': 'O', 'Ç': 'C'
@@ -211,8 +212,17 @@ def pdf_uret(metin):
     for kaynak, hedef in turkce_harfler.items():
         temiz_metin = temiz_metin.replace(kaynak, hedef)
         
-    # Hata veren multi_cell yerine sığma problemi yaratmayan otomatik write yapısı kuruldu
-    for satir in temiz_metin.split('\n'):
+    # SADECE HELVETICA'NIN TANIDIĞI LATIN-1 KARAKTERLERİNİ TUTAN SİHİRLİ KALKAN
+    guvenli_metin = ""
+    for karakter in temiz_metin:
+        try:
+            karakter.encode('latin-1')
+            guvenli_metin += karakter
+        except UnicodeEncodeError:
+            # Yapay zekanın ürettiği emojileri veya yabancı simgeleri sessizce temizle
+            continue
+            
+    for satir in guvenli_metin.split('\n'):
         if satir.strip() == "":
             pdf.ln(4)
         else:
