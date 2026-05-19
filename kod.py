@@ -11,8 +11,8 @@ from fpdf import FPDF
 from io import BytesIO
 import google.generativeai as genai
 import streamlit as st
-14 # 🔑 GİZLİ GEMINI ŞİFREN (Buraya o kendi AIzaSy... şifreni)
-import streamlit as st
+
+# 🔑 GİZLİ GEMINI ŞİFRENİZ (Streamlit Secrets üzerinden okunur)
 _ANAHTARI = st.secrets["GEMINI_API_KEY"]
 
 # Web sitesinin tasarımı (Maksimum Görünürlük Gece Modu)
@@ -29,13 +29,11 @@ if os.path.exists(banner_adi):
     <style>
     .stApp {{
         background-image: url("data:image/png;base64,{encoded_string}") !important;
-        /* 🛠️ YAKLAŞTIRMAYI ENGELLEYEN AYARLAR: */
-        background-size: contain !important; /* Resmi orijinal oranlarında tutar, yaklaştırmaz */
-        background-position: top center !important; /* Resmi yukarıya ve ortalara yerleştirir */
-        background-repeat: no-repeat !important; /* Resmin ekranda defalarca tekrarlanmasını önler */
-        background-attachment: scroll !important; /* Sayfa kaydırıldığında resmin doğal hareket etmesini sağlar */
+        background-size: contain !important;
+        background-position: top center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: scroll !important;
     }}
-    /* Arka plan resminin yazıları kapatmaması için üzerine %87 şeffaf siyah bir tül çekiyoruz */
     .stApp::before {{
         content: "" !important;
         position: absolute !important;
@@ -78,7 +76,7 @@ str_web.markdown(f"""
 
 # Başlıklar
 str_web.markdown('<p class="ana-baslik">🔬 DİJİTAL ARŞİV LABORATUVARI</p>', unsafe_allow_html=True)
-str_web.markdown('<p class="alt-baslik">✨ Yapay Zekâ Destekli Evrensel Rika, Osmanlıca og Belge Dönüşüm Platformu</p>', unsafe_allow_html=True)
+str_web.markdown('<p class="alt-baslik">✨ Yapay Zekâ Destekli Evrensel Rika, Osmanlıca ve Belge Dönüşüm Platformu</p>', unsafe_allow_html=True)
 
 if "okunan_sonuc" not in str_web.session_state:
     str_web.session_state.okunan_sonuc = ""
@@ -92,29 +90,31 @@ yuklenen_dosya = str_web.file_uploader("", type=["jpg", "jpeg", "png", "jfif"])
 if yuklenen_dosya is not None:
     resim = Image.open(yuklenen_dosya)
     
-    str_web.markdown('<div class="adim-karti">🔍 <b>ADIM 2: Yapay Zekâ Analiz Motoru</b><br>Yapay zekanın harfleri ve koordinatları çözmesi için aşağıdaki büyük butona basın.</div>', unsafe_allow_html=True)
-    
-    if str_web.button("🚀 GÖRSEL ANALİZİ VE TARAMAYI BAŞLAT", type="primary"):
-        with str_web.spinner("⏳ Yapay zekâ mikroskop modunda satırları ve harfleri çözüyor... Lütfen bekleyin..."):
+    # 🛠️ BURAYI DÜZELTTİK: kind="primary" yerine sürümünüze uyan type="primary" eklendi
+    if str_web.button("🔮 Belgeyi Çözümle ve Tara", type="primary"):
+        with str_web.spinner("🤖 Yapay zeka arşiv belgesini inceliyor, lütfen bekleyin..."):
             try:
-                gecici_yol = f"{klasor}/gecici_tarama.jpg"
-                resim.save(gecici_yol)
+                gecici_yol = "gecici_resim.jpg"
+                
+                # RGBA (Şeffaf) -> RGB Dönüşümü ve JPEG Kaydetme Pürüz Çözümü
+                resim_rgb = resim.convert('RGB') if resim.mode in ('RGBA', 'LA') else resim
+                resim_rgb.save(gecici_yol, format="JPEG")
                 
                 okuyucu = easyocr.Reader(['ar', 'fa', 'ug', 'tr', 'en'], gpu=False)
                 sonuc = okuyucu.readtext(gecici_yol, canvas_size=3000, mag_ratio=2.0)
                 
                 if sonuc:
                     metinler = []
-                    cizim_resmi = resim.copy()
+                    cizim_resmi = resim_rgb.copy()
                     firca = ImageDraw.Draw(cizim_resmi)
                     
                     for item in sonuc:
-                        koordinat = item
-                        metin = item
+                        koordinat = item[0]
+                        metin = item[1]
                         metinler.append(metin)
                         
-                        sol_ust = tuple(map(int, koordinat))
-                        sag_alt = tuple(map(int, koordinat))
+                        sol_ust = tuple(map(int, koordinat[0]))
+                        sag_alt = tuple(map(int, koordinat[2]))
                         firca.rectangle([sol_ust, sag_alt], outline="red", width=3)
                     
                     str_web.session_state.isaretli_resim = cizim_resmi
@@ -130,83 +130,9 @@ if yuklenen_dosya is not None:
 
     if "isaretli_resim" in str_web.session_state:
         str_web.image(str_web.session_state.isaretli_resim, caption="🔍 Yapay Zekanın Okuduğu Yerler", use_container_width=True)
-    else:
+    elif yuklenen_dosya is not None:
         str_web.image(resim, caption="Yüklenen Belge Orijinal Hali", use_container_width=True)
 
     if str_web.session_state.okunan_sonuc:
         str_web.markdown('<div class="adim-karti">✍️ <b>ADIM 3: Canlı Metin Kontrol ve Düzenleme Ekranı</b><br>Çözülen metinleri aşağıdan inceleyebilirsiniz. Eksik harf varsa üzerine tıklayıp klavyenizle düzeltebilirsiniz.</div>', unsafe_allow_html=True)
-        
         duzenlenen_metin = str_web.text_area("", value=str_web.session_state.okunan_sonuc, height=250)
-        
-        str_web.markdown('<div class="adim-karti">📊 <b>ADIM 4: Yapay Zeka Belge İstatistik Raporu</b></div>', unsafe_allow_html=True)
-        tum_kelimeler = duzenlenen_metin.split()
-        toplam_kelime_sayisi = len(tum_kelimeler)
-        str_web.metric(label="🔢 Toplam Çözülen Kelime Sayısı", value=f"{toplam_kelime_sayisi} Kelime")
-
-        str_web.markdown('<div class="adim-karti">🤖 <b>ADIM 5: Akademik Türkçe Tercüme Paneli</b><br>Eski metni Google Gemini AI kullanarak günümüz kütüphane diline çevirmek için basın.</div>', unsafe_allow_html=True)
-        if str_web.button("🧠 Metni Google Gemini AI ile Türkçeye Çevir", type="secondary"):
-            with str_web.spinner("⏳ Google Gemini dev yapay zekâ beyni metni analiz ediyor..."):
-                try:
-                    genai.configure(api_key=GEMINI_ANAHTARI)
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-                    emir = (
-                        "Sen uzman bir Osmanlı tarihçisi, arşiv uzmanı og dil bilimcisin. "
-                        "Sana verilen Arap alfabesiyle yazılmış metni satır satır incele. "
-                        "Metnin günümüz Latin harfli akıcı, anlaşılır og akademik kütüphane Türkçesiyle tam anlam çevirisini yap."
-                    )
-                    response = model.generate_content([emir, duzenlenen_metin])
-                    str_web.session_state.tercüme_sonuc = f"🤖 [GOOGLE GEMINI AI TERCÜME RAPORU]\n\n{response.text}"
-                    str_web.success("🎉 Gemini Yapay Zeka tercümesi başarıyla tamamlandı!")
-                except Exception as e:
-                    str_web.error(f"Gemini bağlantısında pürüz çıktı: {e}")
-
-        if str_web.session_state.tercüme_sonuc:
-            str_web.info(str_web.session_state.tercüme_sonuc)
-
-        str_web.markdown('<div class="adim-karti">📥 <b>ADIM 6: Dijital Kitabınızı İndirin</b><br>Hazırlanan bu eseri cihazınıza tek tıkla şık formatlarda indirebilirsiniz.</div>', unsafe_allow_html=True)
-        
-        try:
-            doc = Document()
-            for satir in duzenlenen_metin.split('\n'):
-                if satir.strip():
-                    paragraf = doc.add_paragraph()
-                    dogu_harfleri = ["ا", "ب", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ر", "ز", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق", "ك", "ل", "م", "ن", "ه", "و", "ي"]
-                    dogu_mu = any(harf in satir for harf in dogu_harfleri)
-                    paragraf.paragraph_format.rtl = dogu_mu
-                    paragraf.alignment = WD_ALIGN_PARAGRAPH.RIGHT if dogu_mu else WD_ALIGN_PARAGRAPH.LEFT
-                    yazi_tipi = 'Traditional Arabic' if dogu_mu else 'Calibri'
-                    paragraf.add_run(satir)
-                    for run in paragraf.runs:
-                        run.font.name = yazi_tipi
-                        run.font.size = 14 if not dogu_mu else 16
-            
-            if str_web.session_state.tercüme_sonuc:
-                doc.add_page_break()
-                doc.add_paragraph(str_web.session_state.tercüme_sonuc)
-            
-            b_word = BytesIO()
-            doc.save(b_word)
-            b_word.seek(0)
-            str_web.download_button(label="📥 Word Kitabı (.docx) Olarak İndir", data=b_word, file_name="dijital_arsiv_kitabi.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-        except: pass
-
-        try:
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Helvetica", size=12)
-            pdf.cell(200, 10, txt="DIJITAL ARSIV RAPORU", ln=1, align="C")
-            pdf.ln(10)
-            for satir in duzenlenen_metin.split('\n'):
-                if satir.strip():
-                    pdf.multi_cell(0, 10, txt=satir.encode('utf-8', 'ignore').decode('utf-8'))
-            b_pdf = BytesIO()
-            pdf.output(b_pdf)
-            b_pdf.seek(0)
-            str_web.download_button(label="🖨️ PDF Kitapçığı (.pdf) Olarak İndir", data=b_pdf, file_name="dijital_arsiv_kitabi.pdf", mime="application/pdf")
-            str_web.balloons()
-        except: pass
-else:
-    str_web.session_state.okunan_sonuc = ""
-    str_web.session_state.tercüme_sonuc = ""
-    if "isaretli_resim" in str_web.session_state: del str_web.session_state.isaretli_resim
-    str_web.info("💡 Sistem Hazır: Başlamak için lütfen yukarıdaki kutuya bir belge resmi sürükleyin veya seçin.")
