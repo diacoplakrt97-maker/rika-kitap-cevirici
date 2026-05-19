@@ -65,7 +65,6 @@ st.markdown(f"""
     }}
     header[data-testid="stHeader"] svg {{ fill: #34d399 !important; }}
     
-    /* 🛠️ SAĞ ALTAKİ TÜM REKLAM VE YÖNETİM BUTONLARINI TAMAMEN YOK EDEN SİHİRLİ KOD */
     footer, div[data-testid="stDecoration"], .viewerBadge_container__16vsn, div[class*="manageApp"], div[class*="viewerBadge"] {{ 
         visibility: hidden !important; 
         display: none !important; 
@@ -142,32 +141,17 @@ st.markdown(f"""
         border: 1px solid rgba(52, 211, 153, 0.3) !important;
         margin-top: 145px !important; 
     }}
-    
-    .sozluk-kart {{
-        background: rgba(16, 185, 129, 0.1) !important;
-        border-left: 4px solid #10b981 !important;
-        padding: 10px 15px !important;
-        border-radius: 4px 8px 8px 4px !important;
-        margin-bottom: 10px !important;
-    }}
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<p class="ana-baslik">🔬 PALAEO<span>LAB</span> AI</p>', unsafe_allow_html=True)
 st.markdown('<p class="alt-baslik">Osmanlıca Paleografi ve Tarihi Arşivler İçin Yeni Nesil Yapay Zekâ Platformu</p>', unsafe_allow_html=True)
 
-# ==============================================================================
-# 🗄️ 3. GELİŞMİŞ OTURUM HAFIZASI (SESSION STATE)
-# ==============================================================================
 if "belge_arsivi" not in st.session_state: 
     st.session_state.belge_arsivi = {}
 
 if "aktif_belge_adi" not in st.session_state: 
     st.session_state.aktif_belge_adi = None
-
-# ==============================================================================
-# 🛠️ 4. YARDIMCI MOTORLAR (GÖRSEL FİLTRE, PDF VE WORD ÜRETİCİLERİ)
-# ==============================================================================
 def gorsel_iyilestir(image, mod, kontrast, parlaklik):
     img = image.convert("RGB")
     if mod == "Siyah-Beyaz (Yüksek Kontrast)":
@@ -175,7 +159,6 @@ def gorsel_iyilestir(image, mod, kontrast, parlaklik):
         img = img.convert("RGB")
     elif mod == "Gri Tonlama":
         img = img.convert("L").convert("RGB")
-    
     img = ImageEnhance.Contrast(img).enhance(kontrast)
     img = ImageEnhance.Brightness(img).enhance(parlaklik)
     return img
@@ -192,14 +175,11 @@ def docx_uret(metin):
     return b_io.getvalue()
 
 def pdf_uret(metin):
-    """fpdf2 Uyumlu ve Güvenli PDF Üreticisi"""
     pdf = FPDF()
     pdf.add_page()
-    
     pdf.set_font("helvetica", style="B", size=16)
     pdf.cell(0, 10, "PalaeoLab AI - Analiz Raporu", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(5)
-    
     pdf.set_font("helvetica", size=10)
     pdf.cell(0, 5, "Sistem: Evrensel Arsiv ve Analiz Katmani", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(10)
@@ -218,55 +198,37 @@ def pdf_uret(metin):
             pdf.ln(4)
         else:
             pdf.multi_cell(0, 7, satir)
-            
     return pdf.output()
 
 @st.cache_resource
 def ocr_model_yukle():
     return easyocr.Reader(['tr', 'ar'])
 
-# ==============================================================================
-# 📁 5. GİZLİ SOL MENÜ (SIDEBAR) GEÇMİŞ PANELİ YÖNETİMİ
-# ==============================================================================
 with st.sidebar:
     st.markdown("### 🗄️ Laboratuvar Arşivi")
     st.write("Oturum geçmişinizdeki belgelere buradan ulaşabilirsiniz.")
     st.write("---")
-    
     if st.session_state.belge_arsivi:
         arsiv_listesi = list(st.session_state.belge_arsivi.keys())
         secilen_belge = st.radio("Geçmiş Belgeler", arsiv_listesi, label_visibility="collapsed")
         st.session_state.aktif_belge_adi = secilen_belge
     else:
         st.info("Henüz taranmış bir geçmiş döküman bulunmuyor.")
-        
     st.write("---")
     if st.button("🗑️ Geçmişi Temizle"):
         st.session_state.belge_arsivi = {}
         st.session_state.aktif_belge_adi = None
         st.rerun()
 
-# ==============================================================================
-# ℹ️ HIZLI KULLANIM KILAVUZU KATMANI
-# ==============================================================================
 with st.expander("ℹ️ PalaeoLab AI Hızlı Kullanım Kılavuzu (İlk Başlayanlar İçin)", expanded=False):
     st.markdown("""
-    1.  **Görsel Ön İşleme:** Sol panelden yükleyeceğiniz belgenin durumuna göre filtre modu seçip kontrastı ayarlayın.
-    2.  **Belge Yükleme:** Kendi belgenizi yükleyebilir veya test etmek için **'Örnek Belgelerle Test Et'** sekmesini kullanabilirsiniz.
-    3.  **Arşive Ekleme:** Ayarlar bittiğinde **'Belgeyi Arşive Ekle ve Analize Başla'** butonuna basın.
-    4.  **Derin Analiz:** Sağ panele gelen butonlarla `EasyOCR` taraması yapabilir veya `Gemini AI` ile akademik rapor üretebilirsiniz.
+    1.  **Görsel Ön İşleme:** Filtre modu seçip kontrastı ayarlayın.
+    2.  **Belge Yükleme:** Kendi belgenizi yükleyebilir veya **'Örnek Belgelerle Test Et'** sekmesini kullanabilirsiniz.
+    3.  **Arşive Ekleme:** Ayarlar bittiğinde **'Belgeyi Arşive Ekle'** butonuna basın.
+    4.  **Derin Analiz:** Sağ panelden `EasyOCR` veya `Gemini AI` analizini başlatın.
     """)
 
-# ==============================================================================
-# 🎛️ 6. ADIM 1: GÖRSEL İYİLEŞTİRME VE DOSYA YÜKLEME PANELİ
-# ==============================================================================
-st.markdown("""
-<div class="adim-karti">
-    ⚡ <b>ADIM 1: Belge İyileştirme ve Yükleme Paneli</b><br>
-    Yapay zekâ analizini başlatmadan önce belgenin netliğini ve kontrastını optimize edin.
-</div>
-""", unsafe_allow_html=True)
-
+st.markdown('<div class="adim-karti">⚡ <b>ADIM 1: Belge İyileştirme ve Yükleme Paneli</b></div>', unsafe_allow_html=True)
 col_ayar, col_yukle = st.columns(2)
 
 with col_ayar:
@@ -277,49 +239,37 @@ with col_ayar:
 
 with col_yukle:
     st.write("📂 **Belge Kaynağı Seçimi**")
-    kaynak_secimi = st.tabs(["💻 Kendi Belgemi Yükle", "📚 Örnek Belgelerle Test Et"])
+    tab_kendi, tab_ornek = st.tabs(["💻 Kendi Belgemi Yükle", "📚 Örnek Belgelerle Test Et"])
+    yuklenen_dosya, orijinal_gorsel, belge_adi = None, None, None
     
-    yuklenen_dosya = None
-    orijinal_gorsel = None
-    belge_adi = None
-    
-    with kaynak_secimi:
-        yuklenen_dosya = st.file_uploader("Osmanlıca belge görselini yükleyin (PNG, JPG, JPEG)", type=["png", "jpg", "jpeg"], key="kullanici_dosya")
+    with tab_kendi:
+        yuklenen_dosya = st.file_uploader("Osmanlıca belge görselini yükleyin", type=["png", "jpg", "jpeg"], key="kullanici_dosya")
         if yuklenen_dosya is not None:
             orijinal_gorsel = Image.open(yuklenen_dosya)
             belge_adi = yuklenen_dosya.name
             
-    with kaynak_secimi:
+    with tab_ornek:
         st.info("Sistemi test etmek için hazır bir arşiv belgesi seçebilirsiniz:")
-        ornek_belge_turu = st.selectbox(
-            "Test Belgesi Seçin", 
-            ["Seçiniz...", "Örnek 1: Divani Hat ile Yazılmış Ferman", "Örnek 2: Rika Hat ile Yazılmış Sadaret Tahriratı"]
-        )
-        
+        ornek_belge_turu = st.selectbox("Test Belgesi Seçin", ["Seçiniz...", "Örnek 1: Divani Hat ile Yazılmış Ferman", "Örnek 2: Rika Hat ile Yazılmış Sadaret Tahriratı"])
         ornek_linkler = {
             "Örnek 1: Divani Hat ile Yazılmış Ferman": "https://wikimedia.org",
             "Örnek 2: Rika Hat ile Yazılmış Sadaret Tahriratı": "https://wikimedia.org"
         }
-        
         if ornek_belge_turu != "Seçiniz...":
             try:
                 url = ornek_linkler[ornek_belge_turu]
                 response = requests.get(url)
                 orijinal_gorsel = Image.open(BytesIO(response.content))
                 belge_adi = f"Ornek_{ornek_belge_turu.replace(':', '').replace(' ', '_')}.jpg"
-                st.success(f"✔️ {ornek_belge_turu} yüklendi. Şimdi analiz butonuna basabilirsiniz.")
-            except Exception as e:
-                st.error("Örnek belge yüklenirken hata oluştu, lütfen kendi belgenizi yükleyin.")
+                st.success("✔️ Örnek başarıyla yüklendi.")
+            except:
+                st.error("Örnek yüklenemedi.")
 
-# 🚀 GÖRSEL ÖN İŞLEME DÖNGÜSÜ
 if orijinal_gorsel is not None:
     islenmis_gorsel = gorsel_iyilestir(orijinal_gorsel, filtre_modu, kontrast_oran, parlaklik_oran)
-    
     col_orj, col_isl = st.columns(2)
-    with col_orj:
-        st.image(orijinal_gorsel, caption="Kaynak Belge", use_container_width=True)
-    with col_isl:
-        st.image(islenmis_gorsel, caption="İyileştirilmiş Katman (Yapay Zekânın Göreceği)", use_container_width=True)
+    with col_orj: st.image(orijinal_gorsel, caption="Kaynak Belge", use_container_width=True)
+    with col_isl: st.image(islenmis_gorsel, caption="İyileştirilmiş Belge", use_container_width=True)
         
     if st.button("🔮 Belgeyi Arşive Ekle ve Analize Başla", type="primary"):
         if belge_adi not in st.session_state.belge_arsivi:
@@ -327,107 +277,48 @@ if orijinal_gorsel is not None:
         st.session_state.aktif_belge_adi = belge_adi
         st.rerun()
 
-# ==============================================================================
-# 🧠 7. ADIM 2: YAPAY ZEKA VE PALEOGRAFİ ANALİZ LABORATUVARI
-# ==============================================================================
 if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.session_state.belge_arsivi:
     aktif_veri = st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]
+    st.markdown(f'<div class="adim-karti">🧠 <b>ADIM 2: Analiz Odası</b> (Belge: <code>{st.session_state.aktif_belge_adi}</code>)</div>', unsafe_allow_html=True)
+    col_b1, col_b2 = st.columns(2)
     
-    st.markdown(f"""
-    <div class="adim-karti">
-        🧠 <b>ADIM 2: Yapay Zekâ Paleografi Analiz Odası</b><br>
-        Şu an analiz edilen belge: <code>{st.session_state.aktif_belge_adi}</code>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col_buton1, col_buton2 = st.columns(2)
-    
-    with col_buton1:
+    with col_b1:
         if st.button("👁️ EasyOCR ile Ön Karakter Taraması Yap"):
-            with st.spinner("Görsel üzerindeki metin katmanları taranıyor..."):
+            with st.spinner("Taranıyor..."):
                 reader = ocr_model_yukle()
                 aktif_veri["gorsel"].save("gecici.png")
                 sonuc = reader.readtext("gecici.png", detail=0)
                 if os.path.exists("gecici.png"): os.remove("gecici.png")
-                
-                ocr_metni = " ".join(sonuc)
-                st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["ocr_ham"] = ocr_metni
-                st.success("Ön tarama tamamlandı! Sayfa altındaki alandan ham veriyi görebilirsiniz.")
+                st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["ocr_ham"] = " ".join(sonuc)
+                st.success("Ön tarama bitti.")
 
-    with col_buton2:
+    with col_b2:
         if st.button("🤖 Gemini AI ile Derin Paleografik Analiz Başlat"):
             if "GEMINI_API_KEY" in st.secrets:
-                with st.spinner("Gemini multimodal katmanı belgeyi çözümlüyor..."):
+                with st.spinner("Gemini analiz ediyor..."):
                     try:
                         model = genai.GenerativeModel('gemini-2.5-flash')
-                        
                         b_io = BytesIO()
                         aktif_veri["gorsel"].save(b_io, format="PNG")
                         gorsel_parca = {"mime_type": "image/png", "data": b_io.getvalue()}
                         
-                        PALEOGRAFI_PROMPTU = """
-                        Sen T.C. Cumhurbaşkanlığı Devlet Arşivleri standartlarında çalışan kıdemli bir Osmanlı Paleografisi uzmanı, diplomatik tarihçi ve epigraftsın. 
-                        Görseldeki Osmanlı Türkçesi (Arabi harfli) belgeyi diplomatik kurallara göre deşifre et ve yapılandırılmış bir akademik rapor hazırla.
-
-                        Yanıtını tam olarak şu başlıklarla ve Markdown formatında sun:
-
-                        ### 📑 1. DİPLOMATİK VE TÜR ANALİZİ
-                        *   **Belge Türü:** (Ferman, Berat, Ariza, Telgraf, Hüccet, İrade-i Seniyye vb. hangisi olduğunu gerekçesiyle yaz.)
-                        *   **Yazı Türü (Hat):** (Rika, Divani, Nesih, Talik vb. tahmin et.)
-                        *   **Kurumsal Aidiyet:** (Belgenin çıktığı ve gittiği devlet kurumları, makamlar.)
-
-                        ### 📝 2. TRANSKRİPSİYON (METNİN OKUNUŞU)
-                        *Belgenin orijinal Osmanlıca okunuşunu (Latin harfleriyle transkripsiyon kurallarına uygun olarak) satır satır veya düzenli paragraflar halinde buraya aktar.*
-
-                        ### 🔄 3. GÜNÜMÜZ TÜRKÇESİNE SADELEŞTİRME
-                        *Metnin içeriğini, tarihsel bağlamını bozmadan, günümüz resmi ve akıcı Türkçesiyle tam metin olarak çevir.*
-
-                        ### ⏳ 4. TARİH VE TAKVİM DÖNÜŞÜMÜ
-                        *Belgede geçen Hicri veya Rumi tarihleri tespit et ve Miladi takvime dönüştür.*
-
-                        ### 📖 5. ARŞİV VE TERİMLER SÖZLÜĞÜ
-                        *Belgede geçen unvanlar, devlet görevleri veya ağır Arapça/Farsça tamlamalardan en az 5 tanesini seçerek anlamlarını açıkla.*
-                        """
-                        
-                        yanit = model.generate_content([PALEOGRAFI_PROMPTU, gorsel_parca])
+                        PROMPT = "Görseldeki Osmanlıca belgeyi deşifre et: 1. Diplomatik Analiz, 2. Transkripsiyon, 3. Günümüz Türkçesi, 4. Tarih ve Sözlük çıkar."
+                        yanit = model.generate_content([PROMPT, gorsel_parca])
                         st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = yanit.text
                         st.rerun()
-                    except Exception as e:
-                        st.error(f"Gemini API hatası oluştu: {str(e)}")
-            else:
-                st.error("Lütfen önce Streamlit Secrets alanına geçerli bir GEMINI_API_KEY tanımlayın.")
+                    except Exception as e: st.error(f"Hata: {str(e)}")
+            else: st.error("API KEY eksik.")
 
-    # 📊 SONUÇLARIN GÖSTERİLMESİ
     if "ocr_ham" in aktif_veri and aktif_veri["ocr_ham"]:
-        with st.expander("📝 EasyOCR Tarafından Yakalanan Ham Metin Katmanı"):
-            st.code(aktif_veri["ocr_ham"], language="text")
+        with st.expander("📝 Ham Metin Katmanı"): st.code(aktif_veri["ocr_ham"])
 
     if aktif_veri["analiz"]:
-        st.markdown("### 📊 Yapay Zekâ Analiz ve Deşifre Raporu")
-        
-        rapor_metni = st.text_area("Düzenlenebilir Rapor Çıktısı", value=aktif_veri["analiz"], height=450)
+        st.markdown("### 📊 Yapay Zekâ Analiz Raporu")
+        rapor_metni = st.text_area("Düzenlenebilir Çıktı", value=aktif_veri["analiz"], height=400)
         st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = rapor_metni
-        
         st.write("---")
-        st.markdown("### 📥 Raporu Dışa Aktar")
-        col_down1, col_down2 = st.columns(2)
-        
-        with col_down1:
-            docx_data = docx_uret(rapor_metni)
-            st.download_button(
-                label="📥 Word Dosyası (.docx) Olarak İndir",
-                data=docx_data,
-                file_name=f"PalaeoLab_{st.session_state.aktif_belge_adi}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True
-            )
-            
-        with col_down2:
-            pdf_data = pdf_uret(rapor_metni)
-            st.download_button(
-                label="📥 PDF Dosyası (.pdf) Olarak İndir",
-                data=pdf_data,
-                file_name=f"PalaeoLab_{st.session_state.aktif_belge_adi}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
+        col_d1, col_d2 = st.columns(2)
+        with col_d1:
+            st.download_button(label="📥 Word (.docx) İndir", data=docx_uret(rapor_metni), file_name=f"Rapor_{st.session_state.aktif_belge_adi}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
+        with col_d2:
+            st.download_button(label="📥 PDF (.pdf) İndir", data=pdf_uret(rapor_metni), file_name=f"Rapor_{st.session_state.aktif_belge_adi}.pdf", mime="application/pdf", use_container_width=True)
