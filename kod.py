@@ -20,7 +20,7 @@ if "GEMINI_API_KEY" in st.secrets:
 else:
     st.error("Lütfen Streamlit Secrets alanına GEMINI_API_KEY anahtarınızı ekleyin.")
 
-# 🖥️ SAYFA AYARLARI (Geniş ekran düzeni açılır menü için en ideal formattır)
+# 🖥️ SAYFA AYARLARI
 st.set_page_config(page_title="PalaeoLab AI - Evrensel Arşiv ve Analiz Sistemi", layout="wide")
 
 # ==============================================================================
@@ -57,7 +57,6 @@ st.markdown(f"""
     h1, h2, h3, p, label {{ font-family: 'Inter', sans-serif !important; }}
     .main .block-container {{ padding-top: 160px !important; }}
     
-    /* 🧪 Buzlu Cam Efektli Kart Yapısı */
     .adim-karti {{ 
         background: rgba(15, 23, 42, 0.65) !important; 
         backdrop-filter: blur(12px) !important;
@@ -70,7 +69,6 @@ st.markdown(f"""
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
     }}
     
-    /* 📂 Sürükle Bırak Kutusu */
     div[data-testid="stFileUploader"] {{ 
         border: 2px dashed rgba(52, 211, 153, 0.4) !important; 
         border-radius: 14px !important; 
@@ -78,7 +76,6 @@ st.markdown(f"""
         padding: 25px !important; 
     }}
     
-    /* 🔮 Premium Butonlar */
     .stButton>button[kind="primary"] {{ 
         background: linear-gradient(135deg, #10b981, #059669) !important; 
         color: #ffffff !important; 
@@ -91,7 +88,6 @@ st.markdown(f"""
         width: 100% !important;
     }}
     
-    /* 📝 Terminal Düzenleme Alanı */
     .stTextArea textarea {{
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 14px !important;
@@ -107,13 +103,11 @@ st.markdown(f"""
     
     .stImage img {{ border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }}
     
-    /* 🗄️ Sol Menü (Sidebar) Premium Gizli Panel CSS Ayarları */
     section[data-testid="stSidebar"] {{
         background-color: #0b0f17 !important;
         border-right: 1px solid rgba(52, 211, 153, 0.15) !important;
     }}
     
-    /* Üç çizgili hamburger butonunu belirginleştirme ve neon yeşili yapma */
     button[data-testid="stSidebarCollapseButton"] {{
         color: #34d399 !important;
         background-color: rgba(20, 27, 38, 0.8) !important;
@@ -138,16 +132,13 @@ if "aktif_belge_adi" not in st.session_state:
 # ==============================================================================
 # 📁 4. GIZLI SOL MENÜ (SIDEBAR) GEÇMİŞ PANELİ YÖNETİMİ
 # ==============================================================================
-# st.sidebar kullanıldığı an sol üst köşeye otomatik açılır-kapanır üç çizgi butonu gelir
 with st.sidebar:
     st.markdown("### 🗄️ Laboratuvar Arşivi")
-    st.write("Oturum geçmişinizdeki belgelere buradan ulaşabilirsiniz. Sol üstteki **üç çizgili butona (☰)** basarak bu paneli tamamen gizleyebilirsiniz.")
+    st.write("Oturum geçmişinizdeki belgelere buradan ulaşabilirsiniz. Sol üstteki üç çizgili butona (☰) basarak bu paneli tamamen gizleyebilirsiniz.")
     st.write("---")
     
     if st.session_state.belge_arsivi:
         arsiv_listesi = list(st.session_state.belge_arsivi.keys())
-        
-        # Geçmiş belgeleri seçmek için liste kutusu
         secilen_belge = st.radio("Geçmiş Belgeler", arsiv_listesi, label_visibility="collapsed")
         st.session_state.aktif_belge_adi = secilen_belge
     else:
@@ -169,7 +160,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-col_ayar, col_yukle = st.columns()
+# 🛠️ HATA BURADAYDI: st.columns() içerisine bizzat 2 rakamını yazdık!
+col_ayar, col_yukle = st.columns(2)
 
 with col_ayar:
     st.write("⚙️ **Görsel Ön İşleme Katmanı**")
@@ -206,7 +198,7 @@ if yuklenen_dosya is not None:
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 prompt = f"""Sen Osmanlı dönemi arşivleri ve paleografi alanında uzman kıdemli bir bilgi bilimcisin. 
-                Sana sunulan bu tarihi el yazması veya matbu belgeyi analiz et and şu protokolleri yerine getir:
+                Sana sunulan bu tarihi el yazması veya matbu belgeyi analiz et ve şu protokolleri yerine getir:
                 
                 1. Metnin orijinal matbu/Arap harfli transkriptini eksiksiz çıkar.
                 2. Metnin temiz, Latin harfli transkripsiyonlu (okunuş) halini yaz.
