@@ -12,10 +12,8 @@ from io import BytesIO
 import google.generativeai as genai
 import streamlit as st
 14 # 🔑 GİZLİ GEMINI ŞİFREN (Buraya o kendi AIzaSy... şifreni)
-15 import streamlit as st
-16 _ANAHTARI = st.secrets["GEMINI_API_KEY"]
-17 
-18 # Sitenizin tasarımı (Maksimum Görünürlük Gece Modu)
+import streamlit as st
+_ANAHTARI = st.secrets["GEMINI_API_KEY"]
 
 # Web sitesinin tasarımı (Maksimum Görünürlük Gece Modu)
 str_web.set_page_config(page_title="Evrensel Yapay Zeka Arşiv ve Analiz Sistemi", layout="centered")
