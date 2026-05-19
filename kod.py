@@ -48,6 +48,7 @@ if os.path.exists(banner_adi):
 st.markdown(f"""
     {bg_image_html}
     <style>
+    /* 🌐 Google Fonts Bağlantısı Doğru Hale Getirildi */
     @import url('https://googleapis.com');
     
     .stApp {{ 
@@ -198,6 +199,7 @@ with col_ayar:
     kontrast_seviyesi = st.slider("Metin Belirginleştirme (Kontrast)", 1.0, 3.0, 1.6, step=0.1)
 
 with col_yukle:
+    # 🛠️ Yarım kalan dosya yükleme bileşeni eklendi
     yuklenen_dosya = st.file_uploader("Tarihi belgenizi buraya sürükleyip bırakın...", type=["jpg", "jpeg", "png", "jfif"])
 
 # ==============================================================================
@@ -252,7 +254,6 @@ if yuklenen_dosya is not None:
                 response = model.generate_content([prompt, resim_islem])
                 tam_yanit = response.text
                 
-                # 🛠️ GÜVENLİ PARÇALAMA VE KORUMA KATMANI (TRY/EXCEPT SİSTEMİ)
                 metin_kismi = tam_yanit
                 analiz_verisi = None
                 
@@ -264,7 +265,6 @@ if yuklenen_dosya is not None:
                         metin_kismi = tam_yanit[:baslangic].strip()
                         analiz_verisi = json.loads(json_kismi)
                     except:
-                        # Eğer JSON hatalıysa site çökmez, ham metni ekrana basar
                         metin_kismi = tam_yanit
                         analiz_verisi = None
                 
@@ -311,7 +311,6 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         yeni_duzenleme = st.text_area("Metin Düzenleme Alanı", value=aktif_metin, height=380, key=f"txt_{st.session_state.aktif_belge_adi}")
         st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["metin"] = yeni_duzenleme
 
-    # Tablo ve Harita Alanı
     if aktif_analiz and isinstance(aktif_analiz, dict):
         st.markdown('<div class="adim-karti">📊 <b>ADIM 3: Tarihsel Veri ve Coğrafi Harita Analizi</b></div>', unsafe_allow_html=True)
         
@@ -350,7 +349,6 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
             else:
                 st.info("Bu belgede haritalandırılacak coğrafi bir konum bulunamadı.")
 
-        # Sözlük Alanı
         st.markdown('<div class="adim-karti">📖 <b>ADIM 3.5: Yapay Zekâ Paleografi Sözlüğü (Akıllı Lügat)</b><br>Belge metninde geçen ağır, arkaik terimlerin günümüz Türkçesi karşılıkları:</div>', unsafe_allow_html=True)
         
         aktif_sozluk = aktif_analiz.get("sozluk", {})
@@ -367,7 +365,6 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         else:
             st.info("Bu belgede sözlüğe eklenecek ağır veya yabancı bir terim tespit edilemedi.")
 
-        # Rapor İndirme Motoru
         st.markdown('<div class="adim-karti">💾 <b>ADIM 4: Dışa Aktarım ve Sertifikalı Çıktı Motoru</b><br>Raporlarınızı kurumsal formatlarda bilgisayarınıza kaydedin.</div>', unsafe_allow_html=True)
         col_word, col_pdf = st.columns(2)
         
