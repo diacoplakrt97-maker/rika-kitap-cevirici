@@ -9,7 +9,8 @@ import base64
 import easyocr  
 import json     
 import requests
-import time # API gecikmelerini ve akıllı beklemeleri yönetmek için eklendi
+import time 
+import gc # RAM temizliği ve Garbage Collection yönetimi için eklendi
 import torch 
 from PIL import Image, ImageEnhance 
 import google.generativeai as genai 
@@ -182,7 +183,7 @@ def pdf_uret(metin):
     pdf.set_font("helvetica", style="B", size=16)
     pdf.cell(0, 10, "PalaeoLab AI - Analiz Raporu", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(5)
-    pdf.set_font("helvetica", size=10)
+    pdf.set_font("helvetica", style="B", size=10)
     pdf.cell(0, 5, "Sistem: Evrensel Arsiv ve Analiz Katmani", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(10)
     pdf.set_font("helvetica", size=11)
@@ -202,10 +203,11 @@ def pdf_uret(metin):
             pdf.multi_cell(0, 7, satir)
     return pdf.output()
 
-@st.cache_resource
+# 🧠 RAM DOSTU VE BELLEK SIKIŞTIRMALI OCR YÜKLEYİCİ
+@st.cache_resource(max_entries=1) # Sadece tek bir model kopyasını RAM'de tutar
 def ocr_model_yukle():
     gpu_katilimi = torch.cuda.is_available()
-    return easyocr.Reader(['tr', 'ar'], gpu=gpu_katilimi)
+    return easyocr.Reader(['tr', 'ar'], gpu=gpu_katilimi, model_storage_directory=None)
 
 with st.sidebar:
     st.markdown("### 🗄️ Laboratuvar Arşivi")
@@ -227,6 +229,9 @@ with st.sidebar:
     if st.button("🗑️ Geçmişi Temizle"):
         st.session_state.belge_arsivi = {}
         st.session_state.aktif_belge_adi = None
+        # RAM'deki tüm kalıntıları temizle
+        gc.collect()
+        if torch.cuda.is_available(): torch.cuda.empty_cache()
         st.rerun()
 
 with st.expander("ℹ️ PalaeoLab AI Hızlı Kullanım Kılavuzu (İlk Başlayanlar İçin)", expanded=False):
@@ -299,6 +304,8 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                 sonuc = reader.readtext("gecici.png", detail=0)
                 if os.path.exists("gecici.png"): os.remove("gecici.png")
                 st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["ocr_ham"] = " ".join(sonuc)
+                # Süreç sonunda RAM boşaltımı tetikle
+                gc.collect()
                 st.success("Ön tarama bitti.")
 
     with col_b2:
@@ -317,18 +324,17 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         )
         if st.button("🤖 Gemini AI ile Derin Paleografik Analiz Başlat"):
             if "GEMINI_API_KEY" in st.secrets:
-                # 🚀 KOTA VE GÜVENLİK ZIRHI KATMANI BAŞLANGICI
                 istek_durumu = st.empty()
-                with st.spinner("Yapay zekâ sunucusuyla güvenli bağlantı kuruluyor..."):
+                with st.spinner("Gemini analiz ediyor..."):
                     max_deneme = 3
                     basari = False
-                    
                     for deneme in range(max_deneme):
                         try:
                             model = genai.GenerativeModel('gemini-2.5-flash')
                             b_io = BytesIO()
-                            aktif_veri["gorsel"].save(b_io, format="PNG")
-                            gorsel_parca = {"mime_type": "image/png", "data": b_io.getvalue()}
+                            # Kaliteyi bozmadan görseli bulut RAM'i için hafiflet
+                            aktif_veri["gorsel"].save(b_io, format="JPEG", quality=85)
+                            gorsel_parca = {"mime_type": "image/jpeg", "data": b_io.getvalue()}
                             
                             PROMPT = f"""
                             Sen kıdemli bir Osmanlı Paleografisi uzmanısın. Sana yüklenen görseldeki Osmanlıca belge tam olarak **{hat_turu}** yazı türüyle yazılmıştır.
@@ -342,20 +348,20 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                             yanit = model.generate_content([PROMPT, gorsel_parca])
                             st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = yanit.text
                             basari = True
+                            # İşlem bitince RAM ve GPU hafızasını sıfırla
+                            gc.collect()
+                            if torch.cuda.is_available(): torch.cuda.empty_cache()
                             st.rerun()
                             break
                         except Exception as e:
                             hata_mesaji = str(e)
-                            # Eğer sorun kota veya yoğunluksa akıllı bekleme yap
-                            if "429" in hata_mesaji or "quota" in hata_mesaji.lower() or "resource" in hata_mesaji.lower():
-                                istek_durumu.warning(f"⏳ Yapay zekâ sunucusu şu an çok yoğun. {deneme + 1}. deneme öncesi otomatik bekleniyor...")
-                                time.sleep(5) # 5 saniye soğuma süresi ver
+                            if "429" in hata_mesaji or "quota" in hata_mesaji.lower():
+                                istek_durumu.warning(f"⏳ Yoğunluk algılandı. {deneme + 1}. deneme öncesi bekleniyor...")
+                                time.sleep(5)
                             else:
-                                # Kota dışı kritik bir sunucu hatasıysa kullanıcıya rapor et
-                                st.error(f"🛑 Bağlantı Hatası: {hata_mesaji}. Lütfen görsel boyutunu küçültüp tekrar deneyin.")
+                                st.error(f"🛑 Bağlantı Hatası: {hata_mesaji}")
                                 break
-                    if not basari:
-                        st.error("⚠️ Sunucu yanıt vermedi. Lütfen 1 dakika sonra tekrar analiz isteği gönderin.")
+                    if not basari: st.error("⚠️ Sunucu yanıt vermedi.")
             else: st.error("API KEY eksik.")
 
     if "ocr_ham" in aktif_veri and aktif_veri["ocr_ham"]:
