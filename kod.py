@@ -24,7 +24,7 @@ else:
 st.set_page_config(page_title="PalaeoLab AI - Evrensel Arşiv ve Analiz Sistemi", layout="wide")
 
 # ==============================================================================
-# 🎨 2. PREMIUM GÖRSEL TASARIM VE KUSURSUZ OKUNABİLİRLİK (CSS KATMANI)
+# 🎨 2. PREMIUM GÖRSEL TASARIM VE CAM EFEKTLERİ (CSS KATMANI)
 # ==============================================================================
 banner_adi = "banner.png"
 bg_image_html = ""
@@ -39,7 +39,7 @@ if os.path.exists(banner_adi):
         background-size: 100% 140px !important; 
         background-position: top center !important;
         background-repeat: no-repeat !important;
-        background-color: #0b0f17 !important; 
+        background-color: #080c10 !important; 
     }}
     </style>
     """
@@ -55,14 +55,13 @@ st.markdown(f"""
     }}
     
     h1, h2, h3, p, label {{ font-family: 'Inter', sans-serif !important; color: #ffffff !important; }}
-    .main .block-container {{ padding-top: 180px !important; }}
+    .main .block-container {{ padding-top: 160px !important; }}
     
-    /* 🧪 Gelişmiş Buzlu Cam Efektli Kart Yapısı */
     .adim-karti {{ 
         background: rgba(13, 20, 32, 0.85) !important; 
         backdrop-filter: blur(16px) !important;
         -webkit-backdrop-filter: blur(16px) !important;
-        padding: 26px !important; 
+        padding: 24px !important; 
         border-radius: 16px !important; 
         border: 1px solid rgba(52, 211, 153, 0.25) !important; 
         margin-top: 25px !important; 
@@ -70,7 +69,6 @@ st.markdown(f"""
         box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5) !important;
     }}
     
-    /* 📂 Sürükle Bırak Kutusu Tasarımı */
     div[data-testid="stFileUploader"] {{ 
         border: 2px dashed rgba(52, 211, 153, 0.4) !important; 
         border-radius: 14px !important; 
@@ -79,14 +77,11 @@ st.markdown(f"""
     }}
     div[data-testid="stFileUploader"] * {{ color: #ffffff !important; }}
     
-    /* 🚨 OKUNMAYAN GİZLİ YAZILARI BEYAZA ZORLAMA KATMANI (CRITICAL FIX) */
     div[data-testid="stRadio"] p, div[data-testid="stSlider"] p, label p, .stWidgetLabel, div[data-testid="stRadio"] label {{
         color: #ffffff !important; 
         font-weight: 600 !important;
-        text-shadow: 0px 1px 3px rgba(0,0,0,0.5) !important;
     }}
     
-    /* 🟢 Sürgüyü (Slider) Kırmızıdan Neon Yeşiline Çevirme */
     div[data-testid="stSlider"] [data-handle="true"] {{
         background-color: #10b981 !important;
         box-shadow: 0px 0px 10px #10b981 !important;
@@ -95,7 +90,6 @@ st.markdown(f"""
         background: linear-gradient(to right, #10b981, #059669) !important;
     }}
     
-    /* 🔮 Premium Başlatma Butonları */
     .stButton>button[kind="primary"] {{ 
         background: linear-gradient(135deg, #10b981, #059669) !important; 
         color: #ffffff !important; 
@@ -106,14 +100,8 @@ st.markdown(f"""
         padding: 14px 20px !important;
         box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.3) !important;
         width: 100% !important;
-        transition: all 0.2s ease-in-out;
-    }}
-    .stButton>button[kind="primary"]:hover {{
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px 0 rgba(16, 185, 129, 0.5) !important;
     }}
     
-    /* 📝 Kod ve Metin Düzenleme Terminali */
     .stTextArea textarea {{
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 14px !important;
@@ -123,13 +111,12 @@ st.markdown(f"""
         border-radius: 12px !important;
     }}
     
-    .ana-baslik {{ font-size: 38px !important; font-weight: 800 !important; color: #ffffff !important; text-align: center; margin-bottom: 5px; text-shadow: 0px 4px 12px rgba(0,0,0,0.6) !important; }}
+    .ana-baslik {{ font-size: 38px !important; font-weight: 800 !important; color: #ffffff !important; text-align: center; margin-bottom: 5px; }}
     .ana-baslik span {{ background: linear-gradient(to right, #34d399, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
-    .alt-baslik {{ text-align: center !important; color: #94a3b8 !important; font-size: 16px !important; margin-bottom: 35px; text-shadow: 0px 2px 5px rgba(0,0,0,0.6) !important; }}
+    .alt-baslik {{ text-align: center !important; color: #94a3b8 !important; font-size: 16px !important; margin-bottom: 35px; }}
     
     .stImage img {{ border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }}
     
-    /* 🗄️ Sol Menü (Sidebar) ve Açılır Buton Düzenlemesi */
     section[data-testid="stSidebar"] {{
         background-color: #070b13 !important;
         border-right: 1px solid rgba(52, 211, 153, 0.15) !important;
@@ -139,7 +126,16 @@ st.markdown(f"""
         background-color: rgba(20, 27, 38, 0.9) !important;
         border-radius: 8px !important;
         border: 1px solid rgba(52, 211, 153, 0.3) !important;
-        margin-top: 145px !important; /* Butonu üst şeridin altına hizaladık */
+        margin-top: 145px !important; 
+    }}
+    
+    /* 📖 Sözlük Kelime Kutuları Tasarımı */
+    .sozluk-kart {{
+        background: rgba(16, 185, 129, 0.1) !important;
+        border-left: 4px solid #10b981 !important;
+        padding: 10px 15px !important;
+        border-radius: 4px 8px 8px 4px !important;
+        margin-bottom: 10px !important;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -223,6 +219,7 @@ if yuklenen_dosya is not None:
                 
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
+                # 🛠️ PROMPT GÜNCELLENDİ: Yapay zekaya sözlük/lügat üretme emri eklendi
                 prompt = f"""Sen Osmanlı dönemi arşivleri ve paleografi alanında uzman kıdemli bir bilgi bilimcisin. 
                 Sana sunulan bu tarihi el yazması veya matbu belgeyi analiz et ve şu protokolleri yerine getir:
                 
@@ -235,7 +232,11 @@ if yuklenen_dosya is not None:
                      "tarih_miladi": "Dönüştürülmüş Miladi takvim karşılığı",
                      "sahislar": ["Metinde adı veya unvanı geçen önemli tarihi kişiler"],
                      "yerler": ["Metinde adı geçen coğrafi konumlar veya bölgeler"],
-                     "ozet": "Belgenin ana konusunu anlatan tek cümlelik Türkçe özet"
+                     "ozet": "Belgenin ana konusunu anlatan tek cümlelik Türkçe özet",
+                     "sozluk": {{
+                        "agir_kelime_1": "günümüz_turkcesi_anlami",
+                        "agir_kelime_2": "günümüz_turkcesi_anlami"
+                     }}
                    }}
                 OCR motorundan gelen kaba kelime ipuçları: '{ocr_metni}'. Maksimum doğruluğa ulaşmak için görsel bağlam ile bu ipuçlarını harmanla."""
                 
@@ -316,6 +317,27 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
             st.write("📍 **Ayıklanan Coğrafi Konumlar:**")
             st.write(", ".join(aktif_analiz.get("yerler", [])) if aktif_analiz.get("yerler") else "Konum bilgisi ayıklanamadı.")
 
+        # ==============================================================================
+        # 📖 7.5 YENİ ÖZELLİK: İNTERAKTİF PALEOGRAFİ SÖZLÜĞÜ (KAMUS)
+        # ==============================================================================
+        st.markdown('<div class="adim-karti">📖 <b>ADIM 3.5: Yapay Zekâ Paleografi Sözlüğü (Akıllı Lügat)</b><br>Belge metninde geçen ağır, arkaik terimlerin günümüz Türkçesi karşılıkları:</div>', unsafe_allow_html=True)
+        
+        aktif_sozluk = aktif_analiz.get("sozluk", {})
+        if aktif_sozluk and isinstance(aktif_sozluk, dict):
+            # Sözlük kelimelerini iki şık sütunda listeliyoruz
+            col_soz1, col_soz2 = st.columns(2)
+            for i, (osmanlica_kelime, modern_anlam) in enumerate(aktif_sozluk.items()):
+                hedef_kolon = col_soz1 if i % 2 == 0 else col_soz2
+                with hedef_kolon:
+                    st.markdown(f"""
+                    <div class="sozluk-kart">
+                        <b>🔑 {osmanlica_kelime.upper()} :</b> {modern_anlam}
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.info("Bu belgede sözlüğe eklenecek ağır veya yabancı bir terim tespit edilemedi.")
+
+        # ADIM 4: RAPORLAMA VE DIŞA AKTARIM
         st.markdown('<div class="adim-karti">💾 <b>ADIM 4: Dışa Aktarım ve Sertifikalı Çıktı Motoru</b><br>Raporlarınızı kurumsal formatlarda bilgisayarınıza kaydedin.</div>', unsafe_allow_html=True)
         
         col_word, col_pdf = st.columns(2)
