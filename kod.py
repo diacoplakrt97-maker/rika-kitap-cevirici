@@ -24,7 +24,7 @@ else:
 st.set_page_config(page_title="PalaeoLab AI - Evrensel Arşiv ve Analiz Sistemi", layout="wide")
 
 # ==============================================================================
-# 🎨 2. PREMIUM GÖRSEL TASARIM VE GİZLİ PANEL AYARLARI (CSS KATMANI)
+# 🎨 2. PREMIUM GÖRSEL TASARIM VE KUSURSUZ OKUNABİLİRLİK (CSS KATMANI)
 # ==============================================================================
 banner_adi = "banner.png"
 bg_image_html = ""
@@ -39,7 +39,7 @@ if os.path.exists(banner_adi):
         background-size: 100% 140px !important; 
         background-position: top center !important;
         background-repeat: no-repeat !important;
-        background-color: #080c10 !important; 
+        background-color: #0b0f17 !important; 
     }}
     </style>
     """
@@ -54,28 +54,48 @@ st.markdown(f"""
         color: #f1f5f9 !important; 
     }}
     
-    h1, h2, h3, p, label {{ font-family: 'Inter', sans-serif !important; }}
-    .main .block-container {{ padding-top: 160px !important; }}
+    h1, h2, h3, p, label {{ font-family: 'Inter', sans-serif !important; color: #ffffff !important; }}
+    .main .block-container {{ padding-top: 180px !important; }}
     
+    /* 🧪 Gelişmiş Buzlu Cam Efektli Kart Yapısı */
     .adim-karti {{ 
-        background: rgba(15, 23, 42, 0.65) !important; 
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
-        padding: 24px !important; 
+        background: rgba(13, 20, 32, 0.85) !important; 
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        padding: 26px !important; 
         border-radius: 16px !important; 
-        border: 1px solid rgba(52, 211, 153, 0.2) !important; 
+        border: 1px solid rgba(52, 211, 153, 0.25) !important; 
         margin-top: 25px !important; 
         margin-bottom: 25px !important;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+        box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5) !important;
     }}
     
+    /* 📂 Sürükle Bırak Kutusu Tasarımı */
     div[data-testid="stFileUploader"] {{ 
         border: 2px dashed rgba(52, 211, 153, 0.4) !important; 
         border-radius: 14px !important; 
-        background-color: rgba(15, 23, 42, 0.4) !important; 
+        background-color: rgba(9, 14, 23, 0.7) !important; 
         padding: 25px !important; 
     }}
+    div[data-testid="stFileUploader"] * {{ color: #ffffff !important; }}
     
+    /* 🚨 OKUNMAYAN GİZLİ YAZILARI BEYAZA ZORLAMA KATMANI (CRITICAL FIX) */
+    div[data-testid="stRadio"] p, div[data-testid="stSlider"] p, label p, .stWidgetLabel, div[data-testid="stRadio"] label {{
+        color: #ffffff !important; 
+        font-weight: 600 !important;
+        text-shadow: 0px 1px 3px rgba(0,0,0,0.5) !important;
+    }}
+    
+    /* 🟢 Sürgüyü (Slider) Kırmızıdan Neon Yeşiline Çevirme */
+    div[data-testid="stSlider"] [data-handle="true"] {{
+        background-color: #10b981 !important;
+        box-shadow: 0px 0px 10px #10b981 !important;
+    }}
+    div[data-testid="stSlider"] [data-baseweb="slider"] > div {{
+        background: linear-gradient(to right, #10b981, #059669) !important;
+    }}
+    
+    /* 🔮 Premium Başlatma Butonları */
     .stButton>button[kind="primary"] {{ 
         background: linear-gradient(135deg, #10b981, #059669) !important; 
         color: #ffffff !important; 
@@ -86,33 +106,40 @@ st.markdown(f"""
         padding: 14px 20px !important;
         box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.3) !important;
         width: 100% !important;
+        transition: all 0.2s ease-in-out;
+    }}
+    .stButton>button[kind="primary"]:hover {{
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px 0 rgba(16, 185, 129, 0.5) !important;
     }}
     
+    /* 📝 Kod ve Metin Düzenleme Terminali */
     .stTextArea textarea {{
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 14px !important;
-        background-color: rgba(10, 15, 26, 0.8) !important;
+        background-color: rgba(7, 11, 19, 0.9) !important;
         color: #a7f3d0 !important;
         border: 1px solid rgba(52, 211, 153, 0.3) !important;
         border-radius: 12px !important;
     }}
     
-    .ana-baslik {{ font-size: 36px !important; font-weight: 800 !important; color: #ffffff !important; text-align: center; margin-bottom: 5px; }}
-    .ana-baslik span {{ background: linear-gradient(to right, #34d399, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
-    .alt-baslik {{ text-align: center !important; color: #94a3b8 !important; font-size: 16px !important; margin-bottom: 30px; }}
+    .ana-baslik {{ font-size: 38px !important; font-weight: 800 !important; color: #ffffff !important; text-align: center; margin-bottom: 5px; text-shadow: 0px 4px 12px rgba(0,0,0,0.6) !important; }}
+    .ana-baslik span {{ background: linear-gradient(to right, #34d399, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
+    .alt-baslik {{ text-align: center !important; color: #94a3b8 !important; font-size: 16px !important; margin-bottom: 35px; text-shadow: 0px 2px 5px rgba(0,0,0,0.6) !important; }}
     
     .stImage img {{ border-radius: 12px !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }}
     
+    /* 🗄️ Sol Menü (Sidebar) ve Açılır Buton Düzenlemesi */
     section[data-testid="stSidebar"] {{
-        background-color: #0b0f17 !important;
+        background-color: #070b13 !important;
         border-right: 1px solid rgba(52, 211, 153, 0.15) !important;
     }}
-    
     button[data-testid="stSidebarCollapseButton"] {{
         color: #34d399 !important;
-        background-color: rgba(20, 27, 38, 0.8) !important;
+        background-color: rgba(20, 27, 38, 0.9) !important;
         border-radius: 8px !important;
         border: 1px solid rgba(52, 211, 153, 0.3) !important;
+        margin-top: 145px !important; /* Butonu üst şeridin altına hizaladık */
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -160,7 +187,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 🛠️ HATA BURADAYDI: st.columns() içerisine bizzat 2 rakamını yazdık!
 col_ayar, col_yukle = st.columns(2)
 
 with col_ayar:
