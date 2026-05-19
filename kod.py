@@ -9,6 +9,7 @@ import base64
 import easyocr  
 import json     
 import requests
+import torch # Donanımsal GPU kontrolü için eklenen çekirdek kütüphane
 from PIL import Image, ImageEnhance 
 import google.generativeai as genai 
 import streamlit as st  
@@ -200,14 +201,26 @@ def pdf_uret(metin):
             pdf.multi_cell(0, 7, satir)
     return pdf.output()
 
+# 🧠 DONANIMSAL OPTİMİZASYONLU OCR YÜKLEYİCİ
 @st.cache_resource
 def ocr_model_yukle():
-    return easyocr.Reader(['tr', 'ar'])
+    # Sistemde NVIDIA CUDA GPU desteği var mı kontrol et
+    gpu_katilimi = torch.cuda.is_available()
+    return easyocr.Reader(['tr', 'ar'], gpu=gpu_katilimi)
 
 with st.sidebar:
     st.markdown("### 🗄️ Laboratuvar Arşivi")
     st.write("Oturum geçmişinizdeki belgelere buradan ulaşabilirsiniz.")
     st.write("---")
+    
+    # 🖥️ DİNAMİK DONANIM TELEMETRİ PANELİ
+    st.markdown("#### 💻 Sistem Donanım Durumu")
+    if torch.cuda.is_available():
+        st.success(f"🚀 CUDA Aktif: GPU ({torch.cuda.get_device_name(0)})")
+    else:
+        st.info("ℹ️ İşlemci Modu: Standart CPU Katmanı")
+    st.write("---")
+    
     if st.session_state.belge_arsivi:
         arsiv_listesi = list(st.session_state.belge_arsivi.keys())
         secilen_belge = st.radio("Geçmiş Belgeler", arsiv_listesi, label_visibility="collapsed")
@@ -284,7 +297,7 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
     
     with col_b1:
         if st.button("👁️ EasyOCR ile Ön Karakter Taraması Yap"):
-            with st.spinner("Taranıyor..."):
+            with st.spinner("Donanım katmanı tetikleniyor, taranıyor..."):
                 reader = ocr_model_yukle()
                 aktif_veri["gorsel"].save("gecici.png")
                 sonuc = reader.readtext("gecici.png", detail=0)
@@ -336,10 +349,9 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
     if aktif_veri["analiz"]:
         st.markdown("### 📊 Yapay Zekâ Analiz Raporu")
         
-        # 🔍 YENİ EKLEYECEĞİMİZ DİNAMİK KELİME ARAMA MOTORU PANELİ
         with st.container():
             st.markdown('<div style="background-color: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 15px;">🔍 <b>Rapor İçi Terim ve Kelime Arama Motoru</b></div>', unsafe_allow_html=True)
-            arama_kelimesi = st.text_input("Metin içinde aramak istediğiniz kelimeyi yazın (Örn: Sadrazam, Berat, ferman, tarih):", key="kelime_arama_input")
+            arama_kelimesi = st.text_input("Metin içinde aramak istediğiniz kelimeyi yazın:", key="kelime_arama_input")
             
             if arama_kelimesi:
                 satirlar = aktif_veri["analiz"].split('\n')
@@ -350,10 +362,9 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                 
                 if bulunanlar:
                     st.success(f"✔️ Toplam **{len(bulunanlar)}** satırda eşleşme bulundu:")
-                    for s in bulunanlar:
-                        st.markdown(s)
+                    for s in bulunanlar: st.markdown(s)
                 else:
-                    st.warning("⚠️ Aradığınız kelime veya terim analiz raporunda bulunamadı.")
+                    st.warning("⚠️ Kelime bulunamadı.")
         
         rapor_metni = st.text_area("Düzenlenebilir Çıktı", value=aktif_veri["analiz"], height=400)
         st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = rapor_metni
