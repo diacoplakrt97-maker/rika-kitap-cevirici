@@ -58,7 +58,6 @@ st.markdown(f"""
     h1, h2, h3, p, label {{ font-family: 'Inter', sans-serif !important; color: #ffffff !important; }}
     .main .block-container {{ padding-top: 160px !important; }}
     
-    /* 🛠️ SAĞ ÜSTTEKİ MENÜYÜ YEŞİL YAPMA VE REKLAMLARI GİZLEME */
     header[data-testid="stHeader"] button, header[data-testid="stHeader"] div {{ 
         color: #34d399 !important; 
         font-weight: bold !important; 
@@ -253,32 +252,37 @@ if yuklenen_dosya is not None:
                 response = model.generate_content([prompt, resim_islem])
                 tam_yanit = response.text
                 
+                # 🛠️ GÜVENLİ PARÇALAMA VE KORUMA KATMANI (TRY/EXCEPT SİSTEMİ)
+                metin_kismi = tam_yanit
+                analiz_verisi = None
+                
                 if "{" in tam_yanit and "}" in tam_yanit:
-                    baslangic = tam_yanit.find("{")
-                    bitis = tam_yanit.rfind("}") + 1
-                    json_kismi = tam_yanit[baslangic:bitis]
-                    metin_kismi = tam_yanit[:baslangic].strip()
-                    
                     try:
+                        baslangic = tam_yanit.find("{")
+                        bitis = tam_yanit.rfind("}") + 1
+                        json_kismi = tam_yanit[baslangic:bitis]
+                        metin_kismi = tam_yanit[:baslangic].strip()
                         analiz_verisi = json.loads(json_kismi)
                     except:
+                        # Eğer JSON hatalıysa site çökmez, ham metni ekrana basar
+                        metin_kismi = tam_yanit
                         analiz_verisi = None
-                else:
-                    metin_kismi = tam_yanit
-                    analiz_verisi = None
                 
                 sayac = len(st.session_state.belge_arsivi) + 1
-                tip = analiz_verisi.get("belge_turu", "Belge") if analiz_verisi else "Belge"
+                tip = "Belge"
+                if analiz_verisi and isinstance(analiz_verisi, dict):
+                    tip = analiz_verisi.get("belge_turu", "Belge")
+                
                 yeni_isim = f"📁 #{sayac} - {tip}"
                 
                 st.session_state.belge_arsivi[yeni_isim] = {
                     "resim": resim_islem,
-                    "metin": metin_kismi,
+                    "metin": metin_kismi if metin_kismi else tam_yanit,
                     "analiz": analiz_verisi
                 }
                 st.session_state.aktif_belge_adi = yeni_isim
                 
-                st.success("🎉 Belge analizi tamamlandı ve geçmiş listesine eklendi!")
+                st.success("🎉 Belge analizi tamamlandı!")
                 if os.path.exists(gecici_yol): os.remove(gecici_yol)
                 st.rerun() 
             except Exception as e:
@@ -307,7 +311,8 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         yeni_duzenleme = st.text_area("Metin Düzenleme Alanı", value=aktif_metin, height=380, key=f"txt_{st.session_state.aktif_belge_adi}")
         st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["metin"] = yeni_duzenleme
 
-    if aktif_analiz:
+    # Tablo ve Harita Alanı
+    if aktif_analiz and isinstance(aktif_analiz, dict):
         st.markdown('<div class="adim-karti">📊 <b>ADIM 3: Tarihsel Veri ve Coğrafi Harita Analizi</b></div>', unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns(3)
@@ -335,13 +340,17 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
             if koord_listesi and isinstance(koord_listesi, list):
                 try:
                     harita_df = pd.DataFrame(koord_listesi)
-                    harita_df = harita_df.rename(columns={"lat": "latitude", "lon": "longitude"})
-                    st.map(harita_df, zoom=4)
+                    if "lat" in harita_df.columns and "lon" in harita_df.columns:
+                        harita_df = harita_df.rename(columns={"lat": "latitude", "lon": "longitude"})
+                        st.map(harita_df, zoom=4)
+                    else:
+                        st.info("Koordinat yapısı uygun bulunamadı.")
                 except:
-                    st.info("Harita verileri grafikleştirilirken bir pürüz oluştu.")
+                    st.info("Harita verileri yüklenirken küçük bir pürüz oluştu.")
             else:
                 st.info("Bu belgede haritalandırılacak coğrafi bir konum bulunamadı.")
 
+        # Sözlük Alanı
         st.markdown('<div class="adim-karti">📖 <b>ADIM 3.5: Yapay Zekâ Paleografi Sözlüğü (Akıllı Lügat)</b><br>Belge metninde geçen ağır, arkaik terimlerin günümüz Türkçesi karşılıkları:</div>', unsafe_allow_html=True)
         
         aktif_sozluk = aktif_analiz.get("sozluk", {})
@@ -358,8 +367,8 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         else:
             st.info("Bu belgede sözlüğe eklenecek ağır veya yabancı bir terim tespit edilemedi.")
 
+        # Rapor İndirme Motoru
         st.markdown('<div class="adim-karti">💾 <b>ADIM 4: Dışa Aktarım ve Sertifikalı Çıktı Motoru</b><br>Raporlarınızı kurumsal formatlarda bilgisayarınıza kaydedin.</div>', unsafe_allow_html=True)
-        
         col_word, col_pdf = st.columns(2)
         
         # Word
@@ -367,10 +376,6 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         doc.add_heading("PalaeoLab AI - Arşiv Analiz Raporu", 0)
         doc.add_heading("1. Çözümlenen Metin Çıktısı", level=1)
         doc.add_paragraph(yeni_duzenleme)
-        doc.add_heading("2. Katalog ve Metadata Bilgileri", level=1)
-        doc.add_paragraph(f"Belge Türü: {aktif_analiz.get('belge_turu')}")
-        doc.add_paragraph(f"Hicri Tarih: {aktif_analiz.get('tarih_hicri')} | Miladi Karşılığı: {aktif_analiz.get('tarih_miladi')}")
-        doc.add_paragraph(f"Ana Özet: {aktif_analiz.get('ozet')}")
         
         word_akisi = BytesIO()
         doc.save(word_akisi)
@@ -390,7 +395,6 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         pdf.add_page()
         pdf.set_font("Arial", size=12)
         pdf.cell(200, 10, txt="PalaeoLab AI - Onayli Veri Raporu", ln=1, align="C")
-        pdf.ln(10)
         
         temiz_metin = yeni_duzenleme.encode('latin-1', 'ignore').decode('latin-1')
         pdf.multi_cell(0, 10, txt=temiz_metin)
