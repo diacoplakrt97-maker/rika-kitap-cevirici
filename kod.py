@@ -10,12 +10,12 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from fpdf import FPDF
 from io import BytesIO
 import google.generativeai as genai
-
-# 🔑 GİZLİ GEMINI ŞİFREN (Buraya o kendi AIzaSy... şifreni yapıştır)
-GEMINI_ANAHTARI = "# API anahtarını doğrudan koda yazmıyoruz, Streamlit'in gizli ayarlarından okuyacağız
 import streamlit as st
-_ANAHTARI = st.secrets["GEMINI_API_KEY"]
-"
+14 # 🔑 GİZLİ GEMINI ŞİFREN (Buraya o kendi AIzaSy... şifreni)
+15 import streamlit as st
+16 _ANAHTARI = st.secrets["GEMINI_API_KEY"]
+17 
+18 # Sitenizin tasarımı (Maksimum Görünürlük Gece Modu)
 
 # Web sitesinin tasarımı (Maksimum Görünürlük Gece Modu)
 str_web.set_page_config(page_title="Evrensel Yapay Zeka Arşiv ve Analiz Sistemi", layout="centered")
