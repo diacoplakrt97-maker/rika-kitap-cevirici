@@ -12,7 +12,7 @@ from PIL import Image, ImageEnhance
 import google.generativeai as genai 
 import streamlit as st  
 from docx import Document  
-from fpdf import FPDF      
+from fpdf import FPDF  
 from io import BytesIO     
 
 if "GEMINI_API_KEY" in st.secrets:
@@ -47,7 +47,7 @@ if os.path.exists(banner_adi):
 st.markdown(f"""
     {bg_image_html}
     <style>
-    /* 🌐 Google Fonts Entegrasyonu (Global Standart Fontlar) */
+    /* 🌐 Google Fonts Entegrasyonu (Modern ve Profesyonel Fontlar) */
     @import url('https://googleapis.com');
     
     .stApp {{ 
@@ -129,7 +129,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 st.markdown('<p class="ana-baslik">🔬 PALAEO<span>LAB</span> AI</p>', unsafe_allow_html=True)
-st.markdown('<p class="alt-baslik">Next-Generation AI Platform for Ottoman Paleography & Historical Archives</p>', unsafe_allow_html=True)
+st.markdown('<p class="alt-baslik">Osmanlıca Paleografi ve Tarihi Arşivler İçin Yeni Nesil Yapay Zekâ Platformu</p>', unsafe_allow_html=True)
 
 # ==============================================================================
 # 🗄️ 3. HAFIZA YÖNETİMİ (SESSION STATE)
@@ -143,18 +143,18 @@ if "islenmis_resim" not in st.session_state: st.session_state.islenmis_resim = N
 # ==============================================================================
 st.markdown("""
 <div class="adim-karti">
-    ⚡ <b>STEP 1: Document Enhancer & Upload</b><br>
-    Optimize clarity and contrast before triggering the neural network analysis.
+    ⚡ <b>ADIM 1: Belge İyileştirme ve Yükleme Paneli</b><br>
+    Yapay zekâ analizini başlatmadan önce belgenin netliğini ve kontrastını optimize edin.
 </div>
 """, unsafe_allow_html=True)
 
 with st.container():
-    st.write("⚙️ **Image Processing Layer**")
-    filtre_modu = st.radio("Color Mode", ["Original Spectrum", "Monochrome Studio (Recommended for AI)"], horizontal=True)
-    kontrast_seviyesi = st.slider("Text Enhancement (Contrast)", 1.0, 3.0, 1.6, step=0.1)
+    st.write("⚙️ **Görsel Ön İşleme Katmanı**")
+    filtre_modu = st.radio("Renk Modu", ["Orijinal Renk Spektrumu", "Siyah-Beyaz Stüdyo (Yapay Zeka İçin Önerilen)"], horizontal=True)
+    kontrast_seviyesi = st.slider("Metin Belirginleştirme (Kontrast)", 1.0, 3.0, 1.6, step=0.1)
     
     st.write("---")
-    yuklenen_dosya = st.file_uploader("Drop your historical document here...", type=["jpg", "jpeg", "png", "jfif"])
+    yuklenen_dosya = st.file_uploader("Tarihi belgenizi buraya sürükleyip bırakın...", type=["jpg", "jpeg", "png", "jfif"])
 
 # ==============================================================================
 # 🔮 5. HİBRİT OKUMA VEYA ANALİZ MOTORU
@@ -163,7 +163,7 @@ if yuklenen_dosya is not None:
     orijinal_resim = Image.open(yuklenen_dosya)
     resim_islem = orijinal_resim.convert('RGB') if orijinal_resim.mode in ('RGBA', 'LA') else orijinal_resim
     
-    if filtre_modu == "Monochrome Studio (Recommended for AI)":
+    if filtre_modu == "Siyah-Beyaz Stüdyo (Yapay Zeka İçin Önerilen)":
         resim_islem = resim_islem.convert('L').convert('RGB')
         
     gelistirici = ImageEnhance.Contrast(resim_islem)
@@ -171,8 +171,8 @@ if yuklenen_dosya is not None:
     st.session_state.islenmis_resim = resim_islem
 
     st.write("")
-    if st.button("🔮 Run Intelligence Analysis", type="primary"):
-        with st.spinner("🧠 Computing document weights & decoding paleography scripts..."):
+    if st.button("🔮 Akıllı Çözümleme ve Analizi Başlat", type="primary"):
+        with st.spinner("🧠 Belge katmanları inceleniyor ve paleografik yazılar çözülüyor..."):
             try:
                 gecici_yol = "gecici_resim.jpg"
                 st.session_state.islenmis_resim.save(gecici_yol, format="JPEG")
@@ -183,21 +183,21 @@ if yuklenen_dosya is not None:
                 
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                prompt = f"""You are a senior paleography expert and archival information scientist. 
-                Analyze the provided historical manuscript and fulfill the following protocols:
+                prompt = f"""Sen Osmanlı dönemi arşivleri ve paleografi alanında uzman kıdemli bir bilgi bilimcisin. 
+                Sana sunulan bu tarihi el yazması veya matbu belgeyi analiz et ve şu protokolleri yerine getir:
                 
-                1. Transcribe the exact text into its original script (Arabic/Ottoman characters).
-                2. Provide a clean romanized transcription (Latin alphabet).
-                3. Extract document intelligence and return it strictly in the following JSON schema format. Do not include markdown formatting, just raw JSON:
+                1. Metnin orijinal matbu/Arap harfli transkriptini eksiksiz çıkar.
+                2. Metnin temiz, Latin harfli transkripsiyonlu (okunuş) halini yaz.
+                3. Belge istihbaratını ve analiz verilerini tamamen Türkçe olarak ve KESİNLİKLE sadece şu JSON şablonu formatında döndür. Markdown etiketleri ekleme, doğrudan ham JSON olsun:
                    {{
-                     "belge_turu": "Document type (e.g., Ferman, Berat, Decree, Letter)",
-                     "tarih_hicri": "Hijri or Rumi date found in text",
-                     "tarih_miladi": "Converted Gregorian date",
-                     "sahislar": ["Key historical figures or titles mentioned"],
-                     "yerler": ["Geographical locations or regions mentioned"],
-                     "ozet": "One sentence summary of the document's core subject"
+                     "belge_turu": "Belge tipi (Örn: Ferman, Berat, Hüküm, Mektup, Arzuhal)",
+                     "tarih_hicri": "Metinde geçen Hicri veya Rumi tarih",
+                     "tarih_miladi": "Dönüştürülmüş Miladi takvim karşılığı",
+                     "sahislar": ["Metinde adı veya unvanı geçen önemli tarihi kişiler"],
+                     "yerler": ["Metinde adı geçen coğrafi konumlar veya bölgeler"],
+                     "ozet": "Belgenin ana konusunu anlatan tek cümlelik Türkçe özet"
                    }}
-                OCR text token hints: '{ocr_metni}'. Blend visual context with tokens to achieve maximum accuracy."""
+                OCR motorundan gelen kaba kelime ipuçları: '{ocr_metni}'. Maksimum doğruluğa ulaşmak için görsel bağlam ile bu ipuçlarını harmanla."""
                 
                 response = model.generate_content([prompt, st.session_state.islenmis_resim])
                 tam_yanit = response.text
@@ -217,65 +217,65 @@ if yuklenen_dosya is not None:
                     st.session_state.okunan_sonuc = tam_yanit
                     st.session_state.analiz_sonuc = None
                     
-                st.success("🎉 Intelligence analysis successfully compiled!")
+                st.success("🎉 Belge analizi ve veri tablosu başarıyla derlendi!")
                 if os.path.exists(gecici_yol): os.remove(gecici_yol)
             except Exception as e:
-                st.error(f"❌ Core Error: {e}")
+                st.error(f"❌ Sistem Hatası: {e}")
 
     # ==============================================================================
     # 👁️ 6. ADIM 2: İNCELEME VE CANLI METİN DÜZENLEME EKRANI
     # ==============================================================================
-    st.markdown('<div class="adim-karti">👁️ <b>STEP 2: Workspace & Interactive Terminal</b></div>', unsafe_allow_html=True)
+    st.markdown('<div class="adim-karti">👁️ <b>ADIM 2: Çalışma Alanı ve İnteraktif Düzenleme Terminali</b></div>', unsafe_allow_html=True)
     
     if st.session_state.islenmis_resim:
-        st.subheader("🔍 Enhanced Source Document")
+        st.subheader("🔍 İyileştirilmiş Kaynak Belge")
         st.image(st.session_state.islenmis_resim, use_container_width=True)
             
     if st.session_state.okunan_sonuc:
-        st.subheader("✍️ AI Generated Transcript Terminal")
-        st.session_state.okunan_sonuc = st.text_area("Interactive Edit Mode", value=st.session_state.okunan_sonuc, height=300)
+        st.subheader("✍️ Yapay Zekâ Transkript Çıktısı")
+        st.session_state.okunan_sonuc = st.text_area("Canlı Düzenleme Modu", value=st.session_state.okunan_sonuc, height=300)
 
     # ==============================================================================
     # 📊 7. ADIM 3: TARİHSEL AKILLI ANALİZ PANELİ (METADATA)
     # ==============================================================================
     if st.session_state.analiz_sonuc:
-        st.markdown('<div class="adim-karti">📊 <b>STEP 3: Historical Metadata & Archival Insights</b></div>', unsafe_allow_html=True)
+        st.markdown('<div class="adim-karti">📊 <b>ADIM 3: Tarihsel Veri ve Arşiv Kataloğu</b></div>', unsafe_allow_html=True)
         
         veri = st.session_state.analiz_sonuc
         
         c1, c2, c3 = st.columns(3)
-        c1.metric("📜 Classification", veri.get("belge_turu", "Unknown"))
-        c2.metric("📅 Hijri Calendar", veri.get("tarih_hicri", "Not Specified"))
-        c3.metric("🌍 Gregorian Converted", veri.get("tarih_miladi", "Not Computed"))
+        c1.metric("📜 Belge Sınıflandırması", veri.get("belge_turu", "Bilinmiyor"))
+        c2.metric("📅 Hicri Takvim", veri.get("tarih_hicri", "Belirtilmemiş"))
+        c3.metric("🌍 Miladi Takvim Karşılığı", veri.get("tarih_miladi", "Hesaplanamadı"))
         
         st.write("---")
-        st.markdown(f"💡 **Executive Summary:** *{veri.get('ozet', 'No summary available.')}*")
+        st.markdown(f"💡 **Yönetici Özeti:** *{veri.get('ozet', 'Özet mevcut değil.')}*")
         st.write("")
         
         col_sahis, col_yer = st.columns(2)
         with col_sahis:
-            st.write("👥 **Identified Historical Entities / Figures:**")
-            st.write(", ".join(veri.get("sahislar", [])) if veri.get("sahislar") else "No entities extracted.")
+            st.write("👥 **Belirlenen Tarihi Kişiler / Unvanlar:**")
+            st.write(", ".join(veri.get("sahislar", [])) if veri.get("sahislar") else "Kişi adı ayıklanamadı.")
         with col_yer:
-            st.write("📍 **Extracted Geo-Locations:**")
-            st.write(", ".join(veri.get("yerler", [])) if veri.get("yerler") else "No locations extracted.")
+            st.write("📍 **Ayıklanan Coğrafi Konumlar:**")
+            st.write(", ".join(veri.get("yerler", [])) if veri.get("yerler") else "Konum bilgisi ayıklanamadı.")
 
         # ==============================================================================
         # 💾 8. ADIM 4: GELİŞMİŞ RAPORLAMA VE DOSYA İNDİRME MODÜLÜ
         # ==============================================================================
-        st.markdown('<div class="adim-karti">💾 <b>STEP 4: Export Engine</b><br>Generate certified digital archival outputs.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="adim-karti">💾 <b>ADIM 4: Dışa Aktarım ve Sertifikalı Çıktı Motoru</b><br>Resmi dijital arşiv analiz raporlarını bilgisayarınıza indirin.</div>', unsafe_allow_html=True)
         
         col_word, col_pdf = st.columns(2)
         
-        # Word Script
+        # Word Raporu Oluşturma
         doc = Document()
-        doc.add_heading("PalaeoLab AI - Archival Intelligence Report", 0)
-        doc.add_heading("1. Extracted Transcript Terminal Output", level=1)
+        doc.add_heading("PalaeoLab AI - Arşiv Analiz Raporu", 0)
+        doc.add_heading("1. Çözümlenen Metin Çıktısı", level=1)
         doc.add_paragraph(st.session_state.okunan_sonuc)
-        doc.add_heading("2. Metadata Classification Insights", level=1)
-        doc.add_paragraph(f"Document Type: {veri.get('belge_turu')}")
-        doc.add_paragraph(f"Hijri Date: {veri.get('tarih_hicri')} | Gregorian: {veri.get('tarih_miladi')}")
-        doc.add_paragraph(f"Core Summary: {veri.get('ozet')}")
+        doc.add_heading("2. Katalog ve Metadata Bilgileri", level=1)
+        doc.add_paragraph(f"Belge Türü: {veri.get('belge_turu')}")
+        doc.add_paragraph(f"Hicri Tarih: {veri.get('tarih_hicri')} | Miladi Karşılığı: {veri.get('tarih_miladi')}")
+        doc.add_paragraph(f"Ana Özet: {veri.get('ozet')}")
         
         word_akisi = BytesIO()
         doc.save(word_akisi)
@@ -283,17 +283,17 @@ if yuklenen_dosya is not None:
         
         with col_word:
             st.download_button(
-                label="📥 Export Report as Word (.docx)",
+                label="📥 Raporu Word Olarak İndir (.docx)",
                 data=word_akisi,
-                file_name="palaeolab_intelligence_report.docx",
+                file_name="palaeolab_arsiv_raporu.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
             
-        # PDF Script
+        # PDF Raporu Oluşturma
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt="PalaeoLab AI - Certified Data Report", ln=1, align="C")
+        pdf.cell(200, 10, txt="PalaeoLab AI - Onayli Veri Raporu", ln=1, align="C")
         pdf.ln(10)
         
         temiz_metin = st.session_state.okunan_sonuc.encode('latin-1', 'ignore').decode('latin-1')
@@ -302,8 +302,8 @@ if yuklenen_dosya is not None:
         
         with col_pdf:
             st.download_button(
-                label="📥 Export Report as PDF (.pdf)",
+                label="📥 Raporu PDF Olarak İndir (.pdf)",
                 data=pdf_akisi,
-                file_name="palaeolab_intelligence_report.pdf",
+                file_name="palaeolab_arsiv_raporu.pdf",
                 mime="application/pdf"
             )
