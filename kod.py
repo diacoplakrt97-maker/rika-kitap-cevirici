@@ -225,7 +225,7 @@ with st.expander("ℹ️ PalaeoLab AI Hızlı Kullanım Kılavuzu (İlk Başlaya
     1.  **Görsel Ön İşleme:** Filtre modu seçip kontrastı ayarlayın.
     2.  **Belge Yükleme:** Kendi belgenizi yükleyebilir veya **'Örnek Belgelerle Test Et'** sekmesini kullanabilirsiniz.
     3.  **Arşive Ekleme:** Ayarlar bittiğinde **'Belgeyi Arşive Ekle'** butonuna basın.
-    4.  **Derin Analiz:** Sağ panelden `EasyOCR` veya `Gemini AI` analizini başlatın.
+    4.  **Derin Analiz:** Sağ panelden yazı (hat) türünü seçip `Gemini AI` analizini başlatın.
     """)
 
 st.markdown('<div class="adim-karti">⚡ <b>ADIM 1: Belge İyileştirme ve Yükleme Paneli</b></div>', unsafe_allow_html=True)
@@ -293,6 +293,19 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                 st.success("Ön tarama bitti.")
 
     with col_b2:
+        st.write("✒️ **Akademik Hat Türü Spesifikasyonu**")
+        hat_turu = st.selectbox(
+            "Belgenin Hat (Yazı) Türünü Seçin",
+            [
+                "Otomatik Tespit (Genel Mod)",
+                "Rika (Resmi Yazışmalar, Jurnaller, Hızlı El Yazısı)",
+                "Divani (Devlet Fermanları, Beratlar, Sultan Emirleri)",
+                "Nesih (Dini Metinler, Kitaplar, Kanunnameler)",
+                "Talik (Edebi Eserler, Fetvalar, Şer'iyye Sicilleri)",
+                "Siyakat (Maliye, Defterhane, Tapu Tahrir Kayıtları)",
+                "Sülüs / Kufi (Kitabeler, Resmi Başlıklar, Hat Levhaları)"
+            ]
+        )
         if st.button("🤖 Gemini AI ile Derin Paleografik Analiz Başlat"):
             if "GEMINI_API_KEY" in st.secrets:
                 with st.spinner("Gemini analiz ediyor..."):
@@ -302,7 +315,15 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                         aktif_veri["gorsel"].save(b_io, format="PNG")
                         gorsel_parca = {"mime_type": "image/png", "data": b_io.getvalue()}
                         
-                        PROMPT = "Görseldeki Osmanlıca belgeyi deşifre et: 1. Diplomatik Analiz, 2. Transkripsiyon, 3. Günümüz Türkçesi, 4. Tarih ve Sözlük çıkar."
+                        PROMPT = f"""
+                        Sen kıdemli bir Osmanlı Paleografisi uzmanısın. Sana yüklenen görseldeki Osmanlıca belge tam olarak **{hat_turu}** yazı türüyle yazılmıştır.
+                        Bu hat türünün kurallarını, harf birleşme karakteristiklerini ve kuyruk uzantılarını dikkate alarak şu adımları akademik bir rapor olarak çıkar:
+                        1. Diplomatik Analiz (Belge Türü ve Karakteristiği)
+                        2. Transkripsiyon (Metnin Orijinal Okunuşu)
+                        3. Günümüz Türkçesine Sadeleştirme
+                        4. Tarih ve Takvim Dönüşümü (Hicri/Rumi'den Miladi'ye)
+                        5. Arşiv ve Terimler Sözlüğü (En az 5 terim açıklaması)
+                        """
                         yanit = model.generate_content([PROMPT, gorsel_parca])
                         st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = yanit.text
                         st.rerun()
@@ -314,6 +335,26 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
 
     if aktif_veri["analiz"]:
         st.markdown("### 📊 Yapay Zekâ Analiz Raporu")
+        
+        # 🔍 YENİ EKLEYECEĞİMİZ DİNAMİK KELİME ARAMA MOTORU PANELİ
+        with st.container():
+            st.markdown('<div style="background-color: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 15px;">🔍 <b>Rapor İçi Terim ve Kelime Arama Motoru</b></div>', unsafe_allow_html=True)
+            arama_kelimesi = st.text_input("Metin içinde aramak istediğiniz kelimeyi yazın (Örn: Sadrazam, Berat, ferman, tarih):", key="kelime_arama_input")
+            
+            if arama_kelimesi:
+                satirlar = aktif_veri["analiz"].split('\n')
+                bulunanlar = []
+                for i, satir in enumerate(satirlar):
+                    if arama_kelimesi.lower() in satir.lower():
+                        bulunanlar.append(f"**Satır {i+1}:** {satir.replace(arama_kelimesi, f'🛸**{arama_kelimesi}**🛸')}")
+                
+                if bulunanlar:
+                    st.success(f"✔️ Toplam **{len(bulunanlar)}** satırda eşleşme bulundu:")
+                    for s in bulunanlar:
+                        st.markdown(s)
+                else:
+                    st.warning("⚠️ Aradığınız kelime veya terim analiz raporunda bulunamadı.")
+        
         rapor_metni = st.text_area("Düzenlenebilir Çıktı", value=aktif_veri["analiz"], height=400)
         st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = rapor_metni
         st.write("---")
