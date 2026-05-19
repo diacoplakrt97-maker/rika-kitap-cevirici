@@ -9,7 +9,8 @@ import base64
 import easyocr  
 import json     
 import requests
-import torch # Donanımsal GPU kontrolü için eklenen çekirdek kütüphane
+import time # API gecikmelerini ve akıllı beklemeleri yönetmek için eklendi
+import torch 
 from PIL import Image, ImageEnhance 
 import google.generativeai as genai 
 import streamlit as st  
@@ -201,10 +202,8 @@ def pdf_uret(metin):
             pdf.multi_cell(0, 7, satir)
     return pdf.output()
 
-# 🧠 DONANIMSAL OPTİMİZASYONLU OCR YÜKLEYİCİ
 @st.cache_resource
 def ocr_model_yukle():
-    # Sistemde NVIDIA CUDA GPU desteği var mı kontrol et
     gpu_katilimi = torch.cuda.is_available()
     return easyocr.Reader(['tr', 'ar'], gpu=gpu_katilimi)
 
@@ -212,15 +211,12 @@ with st.sidebar:
     st.markdown("### 🗄️ Laboratuvar Arşivi")
     st.write("Oturum geçmişinizdeki belgelere buradan ulaşabilirsiniz.")
     st.write("---")
-    
-    # 🖥️ DİNAMİK DONANIM TELEMETRİ PANELİ
     st.markdown("#### 💻 Sistem Donanım Durumu")
     if torch.cuda.is_available():
         st.success(f"🚀 CUDA Aktif: GPU ({torch.cuda.get_device_name(0)})")
     else:
         st.info("ℹ️ İşlemci Modu: Standart CPU Katmanı")
     st.write("---")
-    
     if st.session_state.belge_arsivi:
         arsiv_listesi = list(st.session_state.belge_arsivi.keys())
         secilen_belge = st.radio("Geçmiş Belgeler", arsiv_listesi, label_visibility="collapsed")
@@ -297,7 +293,7 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
     
     with col_b1:
         if st.button("👁️ EasyOCR ile Ön Karakter Taraması Yap"):
-            with st.spinner("Donanım katmanı tetikleniyor, taranıyor..."):
+            with st.spinner("Taranıyor..."):
                 reader = ocr_model_yukle()
                 aktif_veri["gorsel"].save("gecici.png")
                 sonuc = reader.readtext("gecici.png", detail=0)
@@ -321,26 +317,45 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
         )
         if st.button("🤖 Gemini AI ile Derin Paleografik Analiz Başlat"):
             if "GEMINI_API_KEY" in st.secrets:
-                with st.spinner("Gemini analiz ediyor..."):
-                    try:
-                        model = genai.GenerativeModel('gemini-2.5-flash')
-                        b_io = BytesIO()
-                        aktif_veri["gorsel"].save(b_io, format="PNG")
-                        gorsel_parca = {"mime_type": "image/png", "data": b_io.getvalue()}
-                        
-                        PROMPT = f"""
-                        Sen kıdemli bir Osmanlı Paleografisi uzmanısın. Sana yüklenen görseldeki Osmanlıca belge tam olarak **{hat_turu}** yazı türüyle yazılmıştır.
-                        Bu hat türünün kurallarını, harf birleşme karakteristiklerini ve kuyruk uzantılarını dikkate alarak şu adımları akademik bir rapor olarak çıkar:
-                        1. Diplomatik Analiz (Belge Türü ve Karakteristiği)
-                        2. Transkripsiyon (Metnin Orijinal Okunuşu)
-                        3. Günümüz Türkçesine Sadeleştirme
-                        4. Tarih ve Takvim Dönüşümü (Hicri/Rumi'den Miladi'ye)
-                        5. Arşiv ve Terimler Sözlüğü (En az 5 terim açıklaması)
-                        """
-                        yanit = model.generate_content([PROMPT, gorsel_parca])
-                        st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = yanit.text
-                        st.rerun()
-                    except Exception as e: st.error(f"Hata: {str(e)}")
+                # 🚀 KOTA VE GÜVENLİK ZIRHI KATMANI BAŞLANGICI
+                istek_durumu = st.empty()
+                with st.spinner("Yapay zekâ sunucusuyla güvenli bağlantı kuruluyor..."):
+                    max_deneme = 3
+                    basari = False
+                    
+                    for deneme in range(max_deneme):
+                        try:
+                            model = genai.GenerativeModel('gemini-2.5-flash')
+                            b_io = BytesIO()
+                            aktif_veri["gorsel"].save(b_io, format="PNG")
+                            gorsel_parca = {"mime_type": "image/png", "data": b_io.getvalue()}
+                            
+                            PROMPT = f"""
+                            Sen kıdemli bir Osmanlı Paleografisi uzmanısın. Sana yüklenen görseldeki Osmanlıca belge tam olarak **{hat_turu}** yazı türüyle yazılmıştır.
+                            Bu hat türünün kurallarını, harf birleşme karakteristiklerini ve kuyruk uzantılarını dikkate alarak şu adımları akademik bir rapor olarak çıkar:
+                            1. Diplomatik Analiz (Belge Türü ve Karakteristiği)
+                            2. Transkripsiyon (Metnin Orijinal Okunuşu)
+                            3. Günümüz Türkçesine Sadeleştirme
+                            4. Tarih ve Takvim Dönüşümü (Hicri/Rumi'den Miladi'ye)
+                            5. Arşiv ve Terimler Sözlüğü (En az 5 terim açıklaması)
+                            """
+                            yanit = model.generate_content([PROMPT, gorsel_parca])
+                            st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = yanit.text
+                            basari = True
+                            st.rerun()
+                            break
+                        except Exception as e:
+                            hata_mesaji = str(e)
+                            # Eğer sorun kota veya yoğunluksa akıllı bekleme yap
+                            if "429" in hata_mesaji or "quota" in hata_mesaji.lower() or "resource" in hata_mesaji.lower():
+                                istek_durumu.warning(f"⏳ Yapay zekâ sunucusu şu an çok yoğun. {deneme + 1}. deneme öncesi otomatik bekleniyor...")
+                                time.sleep(5) # 5 saniye soğuma süresi ver
+                            else:
+                                # Kota dışı kritik bir sunucu hatasıysa kullanıcıya rapor et
+                                st.error(f"🛑 Bağlantı Hatası: {hata_mesaji}. Lütfen görsel boyutunu küçültüp tekrar deneyin.")
+                                break
+                    if not basari:
+                        st.error("⚠️ Sunucu yanıt vermedi. Lütfen 1 dakika sonra tekrar analiz isteği gönderin.")
             else: st.error("API KEY eksik.")
 
     if "ocr_ham" in aktif_veri and aktif_veri["ocr_ham"]:
@@ -348,24 +363,19 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
 
     if aktif_veri["analiz"]:
         st.markdown("### 📊 Yapay Zekâ Analiz Raporu")
-        
         with st.container():
             st.markdown('<div style="background-color: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 15px;">🔍 <b>Rapor İçi Terim ve Kelime Arama Motoru</b></div>', unsafe_allow_html=True)
             arama_kelimesi = st.text_input("Metin içinde aramak istediğiniz kelimeyi yazın:", key="kelime_arama_input")
-            
             if arama_kelimesi:
                 satirlar = aktif_veri["analiz"].split('\n')
                 bulunanlar = []
                 for i, satir in enumerate(satirlar):
                     if arama_kelimesi.lower() in satir.lower():
                         bulunanlar.append(f"**Satır {i+1}:** {satir.replace(arama_kelimesi, f'🛸**{arama_kelimesi}**🛸')}")
-                
                 if bulunanlar:
                     st.success(f"✔️ Toplam **{len(bulunanlar)}** satırda eşleşme bulundu:")
                     for s in bulunanlar: st.markdown(s)
-                else:
-                    st.warning("⚠️ Kelime bulunamadı.")
-        
+                else: st.warning("⚠️ Kelime bulunamadı.")
         rapor_metni = st.text_area("Düzenlenebilir Çıktı", value=aktif_veri["analiz"], height=400)
         st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = rapor_metni
         st.write("---")
