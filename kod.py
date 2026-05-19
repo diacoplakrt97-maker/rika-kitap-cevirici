@@ -565,3 +565,85 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                 mime="application/pdf",
                 use_container_width=True
             )
+
+# ==============================================================================
+# 🔮 GELİŞTİRİLMİŞ DIŞA AKTARIM MOTORLARI VE PREMİUM PROMPT KATMANI
+# ==============================================================================
+
+def docx_uret(metin):
+    """Gelişmiş Word Rapor Üreticisi"""
+    doc = Document()
+    # Başlık stili
+    baslik = doc.add_heading('🔬 PalaeoLab AI - Paleografik Analiz ve Deşifre Raporu', 0)
+    baslik.alignment = 1 # Ortalanmış
+    
+    doc.add_paragraph("Bu rapor PalaeoLab AI paleografi otomasyon sistemi tarafından üretilmiştir.")
+    doc.add_paragraph("-" * 40)
+    
+    # Rapor içeriğini ekle
+    doc.add_paragraph(metin)
+    
+    b_io = BytesIO()
+    doc.save(b_io)
+    return b_io.getvalue()
+
+def pdf_uret(metin):
+    """Türkçe Karakter Uyumlu PDF Üreticisi"""
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Standart fontlar yerine evrensel Unicode/Latin1 güvenli karakter temizliği
+    pdf.set_font("Helvetica", style="B", size=16)
+    pdf.cell(0, 10, "PalaeoLab AI - Analiz Raporu", ln=1, align="C")
+    pdf.ln(5)
+    
+    pdf.set_font("Helvetica", size=10)
+    pdf.cell(0, 5, "Tarih: 2026-05-19 | Sistem: Evrensel Arsiv ve Analiz Katmani", ln=1, align="C")
+    pdf.ln(10)
+    
+    pdf.set_font("Helvetica", size=11)
+    
+    # Türkçe karakterlerin PDF çıktısında kırılmaması için güvenli harf dönüşüm haritası
+    turkce_harfler = {
+        'ı': 'i', 'ğ': 'g', 'ü': 'u', 'ş': 's', 'ö': 'o', 'ç': 'c',
+        'İ': 'I', 'Ğ': 'G', 'Ü': 'U', 'Ş': 'S', 'Ö': 'O', 'Ç': 'C'
+    }
+    
+    temiz_metin = metin
+    for kaynak, hedef in turkce_harfler.items():
+        temiz_metin = temiz_metin.replace(kaynak, hedef)
+        
+    # Satır satır yazdırarak sayfa taşma kontrolü sağlama
+    for satir in temiz_metin.split('\n'):
+        if satir.strip() == "":
+            pdf.ln(4)
+        else:
+            pdf.multi_cell(0, 7, satir)
+            
+    return pdf.output(dest='S').encode('latin-1', 'ignore')
+
+# 🏛️ AKADEMİK GEMİNİ PALEOGRAFİ PROMPTU
+PALEOGRAFI_PROMPTU = """
+Sen T.C. Cumhurbaşkanlığı Devlet Arşivleri standartlarında çalışan kıdemli bir Osmanlı Paleografisi uzmanı, diplomatik tarihçi ve epigraftsın. 
+Görseldeki Osmanlı Türkçesi (Arabi harfli) belgeyi diplomatik kurallara göre deşifre et ve yapılandırılmış bir akademik rapor hazırla.
+
+Yanıtını tam olarak şu başlıklarla ve Markdown formatında sun:
+
+### 📑 1. DİPLOMATİK VE TÜR ANALİZİ
+*   **Belge Türü:** (Ferman, Berat, Ariza, Telgraf, Hüccet, İrade-i Seniyye, tahrirat vb. hangisi olduğunu gerekçesiyle yaz.)
+*   **Yazı Türü (Hat):** (Rika, Divani, Nesih, Talik, Sülüs, Siyakat vb. tahmin et.)
+*   **Kurumsal Aidiyet:** (Belgenin çıktığı ve gittiği devlet kurumları, makamlar.)
+
+### 📝 2. TRANSKRİPSİYON (METNİN OKUNUŞU)
+*Belgenin orijinal Osmanlıca okunuşunu (Latin harfleriyle transkripsiyon kurallarına uygun olarak) satır satır veya düzenli paragraflar halinde buraya aktar. Bilinmeyen/okunamayan kelimeler için [okunamadı] ifadesini kullan.*
+
+### 🔄 3. GÜNÜMÜZ TÜRKÇESİNE SADELEŞTİRME
+*Metnin içeriğini, tarihsel bağlamını ve hukuki/idari anlamını bozmadan, günümüz resmi ve akıcı Türkçesiyle tam metin olarak özetle/çevir.*
+
+### ⏳ 4. TARİH VE TAKVİM DÖNÜŞÜMÜ
+*Belgede geçen Hicri veya Rumi tarihleri tespit et. Bu tarihleri Miladi takvime (gün-ay-yıl netliğinde) dönüştür.*
+
+### 📖 5. ARŞİV VE TERİMLER SÖZLÜĞÜ
+*Belgede geçen unvanlar, devlet görevleri, hukuki terimler veya ağır Arapça/Farsça tamlamalardan en az 5 tanesini seçerek anlamlarını açıkla.*
+(Örnek: "Bende-i dâ'î", "Mîr-i mîrân", "Mûcebince amel oluna" vb.)
+"""
