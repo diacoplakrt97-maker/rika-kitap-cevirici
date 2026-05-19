@@ -408,3 +408,160 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                 mime="application/pdf",
                 key=f"p_{st.session_state.aktif_belge_adi}"
             )
+
+# ==============================================================================
+# 🎛️ 5. ADIM 1: GÖRSEL İYİLEŞTİRME VE DOSYA YÜKLEME PANELİ (DEVAMI)
+# ==============================================================================
+    filtre_modu = st.radio("İşlem Modu", ["Renkli (Orijinal)", "Siyah-Beyaz (Yüksek Kontrast)", "Gri Tonlama"], horizontal=True)
+    kontrast_oran = st.slider("Kontrast Seviyesi", 0.5, 3.0, 1.5, 0.1)
+    parlaklik_oran = st.slider("Parlaklık Seviyesi", 0.5, 2.0, 1.0, 0.1)
+
+with col_yukle:
+    st.write("📂 **Belge Yükleme**")
+    yuklenen_dosya = st.file_uploader("Osmanlıca belge görselini yükleyin (PNG, JPG, JPEG)", type=["png", "jpg", "jpeg"])
+
+# ⚙️ GÖRSEL ÖN İŞLEME FONKSİYONU
+def gorsel_iyilestir(image, mod, kontrast, parlaklik):
+    img = image.convert("RGB")
+    if mod == "Siyah-Beyaz (Yüksek Kontrast)":
+        img = img.convert("L").point(lambda x: 0 if x < 128 else 255, '1')
+        img = img.convert("RGB")
+    elif mod == "Gri Tonlama":
+        img = img.convert("L").convert("RGB")
+    
+    img = ImageEnhance.Contrast(img).enhance(kontrast)
+    img = ImageEnhance.Brightness(img).enhance(parlaklik)
+    return img
+
+# 🔮 FONKSİYONLAR: DIŞA AKTARIM VE ANALİZ
+def docx_uret(metin):
+    doc = Document()
+    doc.add_heading('PalaeoLab AI - Analiz Raporu', 0)
+    doc.add_paragraph(metin)
+    b_io = BytesIO()
+    doc.save(b_io)
+    return b_io.getvalue()
+
+def pdf_uret(metin):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    # UTF-8 karakter uyumluluğu için basit temizlik
+    temiz_metin = metin.encode('latin-1', 'ignore').decode('latin-1')
+    pdf.multi_cell(0, 10, temiz_metin)
+    return pdf.output(dest='S').encode('latin-1')
+
+@st.cache_resource
+def ocr_model_yukle():
+    return easyocr.Reader(['tr', 'ar'])
+
+# 🚀 BELGE İŞLEME ANA DÖNGÜSÜ
+islenmis_gorsel = None
+if yuklenen_dosya is not None:
+    orijinal_gorsel = Image.open(yuklenen_dosya)
+    islenmis_gorsel = gorsel_iyilestir(orijinal_gorsel, filtre_modu, kontrast_oran, parlaklik_oran)
+    
+    col_orj, col_isl = st.columns(2)
+    with col_orj:
+        st.image(orijinal_gorsel, caption="Orijinal Belge", use_container_width=True)
+    with col_isl:
+        st.image(islenmis_gorsel, caption="İyileştirilmiş Belge", use_container_width=True)
+        
+    if st.button("🔮 Belgeyi Arşive Ekle ve Analize Başla", type="primary"):
+        b_name = yuklenen_dosya.name
+        if b_name not in st.session_state.belge_arsivi:
+            st.session_state.belge_arsivi[b_name] = {"gorsel": islenmis_gorsel, "analiz": None}
+        st.session_state.aktif_belge_adi = b_name
+        st.rerun()
+
+# ==============================================================================
+# 🧠 6. ADIM 2: YAPAY ZEKA VE PALEOGRAFİ ANALİZ LABORATUVARI
+# ==============================================================================
+if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.session_state.belge_arsivi:
+    aktif_veri = st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]
+    
+    st.markdown(f"""
+    <div class="adim-karti">
+        🧠 <b>ADIM 2: Yapay Zekâ Paleografi Analiz Odası</b><br>
+        Şu an analiz edilen belge: <code>{st.session_state.aktif_belge_adi}</code>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col_buton1, col_buton2 = st.columns(2)
+    
+    with col_buton1:
+        if st.button("👁️ EasyOCR ile Ön Karakter Taraması Yap"):
+            with st.spinner("Görsel üzerindeki metin katmanları taranıyor..."):
+                reader = ocr_model_yukle()
+                islenmis_gorsel.save("gecici.png")
+                sonuc = reader.readtext("gecici.png", detail=0)
+                if os.path.exists("gecici.png"): os.remove("gecici.png")
+                
+                ocr_metni = " ".join(sonuc)
+                st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["ocr_ham"] = ocr_metni
+                st.success("Ön tarama tamamlandı! Sayfa altına eklenen alandan ham veriyi görebilirsiniz.")
+
+    with col_buton2:
+        if st.button("🤖 Gemini AI ile Derin Paleografik Analiz Başlat"):
+            if "GEMINI_API_KEY" in st.secrets:
+                with st.spinner("Gemini multimodal katmanı belgeyi çözümlüyor..."):
+                    try:
+                        model = genai.GenerativeModel('gemini-2.5-flash')
+                        
+                        # Görsel verisini Gemini formatına dönüştürme
+                        b_io = BytesIO()
+                        aktif_veri["gorsel"].save(b_io, format="PNG")
+                        gorsel_parca = {"mime_type": "image/png", "data": b_io.getvalue()}
+                        
+                        prompt = """
+                        Sen uzman bir Osmanlı paleografi uzmanı ve tarihçisin. Ekli Osmanlıca belge görselini incele ve şu adımları eksiksiz gerçekleştir:
+                        1. Transkripsiyon: Metnin Osmanlıca okunuşunu (Latin harfleriyle) satır satır çıkar.
+                        2. Günümüz Türkçesi: Metni günümüz akıcı Türkçesine sadeleştirerek çevir.
+                        3. Tarihsel Analiz: Belgenin türünü (Ferman, Berat, Ariza vb.), dönemini, varsa tarihi ve kurumları analiz et.
+                        4. Mini Sözlük: Belgede geçen ağır Arapça, Farsça veya eski Türkçe terimlerden en az 5 tanesini seçip anlamlarını yaz.
+                        Yanıtı profesyonel Markdown formatında, başlıklar kullanarak ver.
+                        """
+                        
+                        yanit = model.generate_content([prompt, gorsel_parca])
+                        st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = yanit.text
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Gemini API hatası oluştu: {str(e)}")
+            else:
+                st.error("Lütfen önce Streamlit Secrets alanına geçerli bir GEMINI_API_KEY tanımlayın.")
+
+    # 📊 SONUÇLARIN GÖSTERİLMESİ
+    if "ocr_ham" in aktif_veri and aktif_veri["ocr_ham"]:
+        with st.expander("📝 EasyOCR Tarafından Yakalanan Ham Metin Katmanı"):
+            st.code(aktif_veri["ocr_ham"], language="text")
+
+    if aktif_veri["analiz"]:
+        st.markdown("### 📊 Yapay Zekâ Analiz ve Deşifre Raporu")
+        
+        # Sonuç ekranını düzenlenebilir kılmak için TextArea'ya gömme seçeneği
+        rapor_metni = st.text_area("Düzenlenebilir Rapor Çıktısı", value=aktif_veri["analiz"], height=450)
+        st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = rapor_metni
+        
+        st.write("---")
+        st.markdown("### 📥 Raporu Dışa Aktar")
+        col_down1, col_down2 = st.columns(2)
+        
+        with col_down1:
+            docx_data = docx_uret(rapor_metni)
+            st.download_button(
+                label="📥 Word Dosyası (.docx) Olarak İndir",
+                data=docx_data,
+                file_name=f"PalaeoLab_{st.session_state.aktif_belge_adi}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True
+            )
+            
+        with col_down2:
+            pdf_data = pdf_uret(rapor_metni)
+            st.download_button(
+                label="📥 PDF Dosyası (.pdf) Olarak İndir",
+                data=pdf_data,
+                file_name=f"PalaeoLab_{st.session_state.aktif_belge_adi}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
