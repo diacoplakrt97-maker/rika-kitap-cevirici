@@ -25,7 +25,7 @@ else:
 st.set_page_config(page_title="PalaeoLab AI - Evrensel Arşiv ve Analiz Sistemi", layout="wide")
 
 # ==============================================================================
-# 🎨 2. PREMIUM GÖRSEL TASARIM VE CAM EFEKTLERİ (CSS KATMANI)
+# 🎨 2. PREMIUM GÖRSEL TASARIM VE KUSURSUZ GİZLEME AYARLARI (CSS KATMANI)
 # ==============================================================================
 banner_adi = "banner.png"
 bg_image_html = ""
@@ -48,7 +48,6 @@ if os.path.exists(banner_adi):
 st.markdown(f"""
     {bg_image_html}
     <style>
-    /* 🌐 Google Fonts Bağlantısı Doğru Hale Getirildi */
     @import url('https://googleapis.com');
     
     .stApp {{ 
@@ -64,7 +63,12 @@ st.markdown(f"""
         font-weight: bold !important; 
     }}
     header[data-testid="stHeader"] svg {{ fill: #34d399 !important; }}
-    footer, div[data-testid="stDecoration"] {{ visibility: hidden !important; display: none !important; }}
+    
+    /* 🛠️ SAĞ ALTAKİ TÜM REKLAM VE YÖNETİM BUTONLARINI TAMAMEN YOK EDEN SİHİRLİ KOD */
+    footer, div[data-testid="stDecoration"], .viewerBadge_container__16vsn, div[class*="manageApp"], div[class*="viewerBadge"] {{ 
+        visibility: hidden !important; 
+        display: none !important; 
+    }}
     
     .adim-karti {{ 
         background: rgba(13, 20, 32, 0.85) !important; 
@@ -199,7 +203,6 @@ with col_ayar:
     kontrast_seviyesi = st.slider("Metin Belirginleştirme (Kontrast)", 1.0, 3.0, 1.6, step=0.1)
 
 with col_yukle:
-    # 🛠️ Yarım kalan dosya yükleme bileşeni eklendi
     yuklenen_dosya = st.file_uploader("Tarihi belgenizi buraya sürükleyip bırakın...", type=["jpg", "jpeg", "png", "jfif"])
 
 # ==============================================================================
