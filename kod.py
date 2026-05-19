@@ -12,7 +12,10 @@ from io import BytesIO
 import google.generativeai as genai
 
 # 🔑 GİZLİ GEMINI ŞİFREN (Buraya o kendi AIzaSy... şifreni yapıştır)
-GEMINI_ANAHTARI = "AIzaSyBgLNr74_9wfFqn7lXr6VFrNSptG540AiA"
+GEMINI_ANAHTARI = "# API anahtarını doğrudan koda yazmıyoruz, Streamlit'in gizli ayarlarından okuyacağız
+import streamlit as st
+_ANAHTARI = st.secrets["GEMINI_API_KEY"]
+"
 
 # Web sitesinin tasarımı (Maksimum Görünürlük Gece Modu)
 str_web.set_page_config(page_title="Evrensel Yapay Zeka Arşiv ve Analiz Sistemi", layout="centered")
