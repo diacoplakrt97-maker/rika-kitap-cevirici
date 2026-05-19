@@ -192,16 +192,18 @@ def docx_uret(metin):
     return b_io.getvalue()
 
 def pdf_uret(metin):
+    """fpdf2 Uyumlu ve Güvenli PDF Üreticisi"""
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Helvetica", style="B", size=16)
-    pdf.cell(0, 10, "PalaeoLab AI - Analiz Raporu", ln=1, align="C")
+    
+    pdf.set_font("helvetica", style="B", size=16)
+    pdf.cell(0, 10, "PalaeoLab AI - Analiz Raporu", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(5)
     
-    pdf.set_font("Helvetica", size=10)
-    pdf.cell(0, 5, "Sistem: Evrensel Arsiv ve Analiz Katmani", ln=1, align="C")
+    pdf.set_font("helvetica", size=10)
+    pdf.cell(0, 5, "Sistem: Evrensel Arsiv ve Analiz Katmani", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(10)
-    pdf.set_font("Helvetica", size=11)
+    pdf.set_font("helvetica", size=11)
     
     turkce_harfler = {
         'ı': 'i', 'ğ': 'g', 'ü': 'u', 'ş': 's', 'ö': 'o', 'ç': 'c',
@@ -217,7 +219,7 @@ def pdf_uret(metin):
         else:
             pdf.multi_cell(0, 7, satir)
             
-    return pdf.output(dest='S').encode('latin-1', 'ignore')
+    return pdf.output()
 
 @st.cache_resource
 def ocr_model_yukle():
@@ -281,13 +283,13 @@ with col_yukle:
     orijinal_gorsel = None
     belge_adi = None
     
-    with kaynak_secimi[0]:
+    with kaynak_secimi:
         yuklenen_dosya = st.file_uploader("Osmanlıca belge görselini yükleyin (PNG, JPG, JPEG)", type=["png", "jpg", "jpeg"], key="kullanici_dosya")
         if yuklenen_dosya is not None:
             orijinal_gorsel = Image.open(yuklenen_dosya)
             belge_adi = yuklenen_dosya.name
             
-    with kaynak_secimi[1]:
+    with kaynak_secimi:
         st.info("Sistemi test etmek için hazır bir arşiv belgesi seçebilirsiniz:")
         ornek_belge_turu = st.selectbox(
             "Test Belgesi Seçin", 
@@ -383,7 +385,7 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                         ### ⏳ 4. TARİH VE TAKVİM DÖNÜŞÜMÜ
                         *Belgede geçen Hicri veya Rumi tarihleri tespit et ve Miladi takvime dönüştür.*
 
-                        ### 📖 5. ARŞİV AND TERİMLER SÖZLÜĞÜ
+                        ### 📖 5. ARŞİV VE TERİMLER SÖZLÜĞÜ
                         *Belgede geçen unvanlar, devlet görevleri veya ağır Arapça/Farsça tamlamalardan en az 5 tanesini seçerek anlamlarını açıkla.*
                         """
                         
