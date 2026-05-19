@@ -85,13 +85,29 @@ st.markdown(f"""
         box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5) !important;
     }}
     
+    /* 📂 SİLİK DOSYA YÜKLEME ALANINI PARLATAN SİHİRLİ CSS YAPISI */
     div[data-testid="stFileUploader"] {{ 
-        border: 2px dashed rgba(52, 211, 153, 0.4) !important; 
+        border: 2px dashed #10b981 !important; 
         border-radius: 14px !important; 
-        background-color: rgba(9, 14, 23, 0.7) !important; 
-        padding: 25px !important; 
+        background-color: rgba(13, 20, 32, 0.9) !important; 
+        padding: 30px !important; 
+        box-shadow: 0 4px 20px 0 rgba(16, 185, 129, 0.1) !important;
     }}
-    div[data-testid="stFileUploader"] * {{ color: #ffffff !important; }}
+    /* İçerideki tüm silik gri yazıları fildişi beyazı yapar */
+    div[data-testid="stFileUploader"] div, div[data-testid="stFileUploader"] span {{ 
+        color: #f1f5f9 !important; 
+        font-weight: 500 !important;
+    }}
+    /* Dosya yükleme ikonunu parlak neon yeşile boyar */
+    div[data-testid="stFileUploader"] svg {{ 
+        fill: #34d399 !important; 
+        transform: scale(1.1);
+    }}
+    /* Alttaki küçük limit ve format yazılarını okunabilir yapar */
+    div[data-testid="stFileUploader"] small {{ 
+        color: #a7f3d0 !important; 
+        font-weight: bold !important;
+    }}
     
     div[data-testid="stRadio"] p, div[data-testid="stSlider"] p, label p, .stWidgetLabel, div[data-testid="stRadio"] label {{
         color: #ffffff !important; 
@@ -232,16 +248,12 @@ with st.sidebar:
         if torch.cuda.is_available(): torch.cuda.empty_cache()
         st.rerun()
 
-# 🧭 ÜST SEVİYE AKADEMİK NAVİGASYON KATMANI (MULTI-PAGE WORKSPACE)
 sekme_ocr, sekme_gemini, sekme_sozluk = st.tabs([
     "🔬 1. Belge İşleme ve OCR Odası", 
     "🧠 2. Gemini Akademik Analiz Paneli", 
     "📖 3. İnteraktif Sözlük ve Terim Takibi"
 ])
 
-# ==============================================================================
-# 🚪 ODALARIN İÇERİK MİMARİSİ
-# ==============================================================================
 with sekme_ocr:
     st.markdown('<div class="adim-karti">⚡ <b>Belge İyileştirme ve Yükleme Laboratuvarı</b></div>', unsafe_allow_html=True)
     col_ayar, col_yukle = st.columns(2)
@@ -302,10 +314,10 @@ with sekme_ocr:
                 if os.path.exists("gecici.png"): os.remove("gecici.png")
                 st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["ocr_ham"] = " ".join(sonuc)
                 gc.collect()
-                st.success("Ön tarama bitti. Aşağıdaki alandan veya üst sekmelerden sonuçları izleyebilirsiniz.")
+                st.success("Ön tarama bitti.")
         
         if "ocr_ham" in aktif_veri and aktif_veri["ocr_ham"]:
-            st.text_area("Yakalana Ham Yazı Katmanı", value=aktif_veri["ocr_ham"], height=150)
+            st.text_area("Yakalanan Ham Yazı Katmanı", value=aktif_veri["ocr_ham"], height=150)
 
 with sekme_gemini:
     if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.session_state.belge_arsivi:
@@ -393,22 +405,21 @@ with sekme_sozluk:
                 if bulunanlar:
                     st.success(f"✔️ Rapor içinde toplam **{len(bulunanlar)}** satırda bu kelime geçiyor:")
                     for s in bulunanlar: st.markdown(s)
-                else:
-                    st.warning("⚠️ Kelime analiz raporunda bulunamadı.")
+                else: st.warning("⚠️ Kelime analiz raporunda bulunamadı.")
             
             st.write("---")
             st.markdown("#### 📜 Temel Paleografi Kılavuz Sözlüğü")
             col_s1, col_s2 = st.columns(2)
             with col_s1:
                 st.markdown("""
-                <div class="sozluk-kart"><b>Mûcebince amel oluna:</b> Gereğince işlem yapılsın (Padişah hatt-ı hümayunlarında geçer).</div>
-                <div class="sozluk-kart"><b>Bende-i dâ'î:</b> Dua eden kulunuz, köleniz (Dilekçelerde imza makamıdır).</div>
+                <div class="sozluk-kart"><b>Mûcebince amel oluna:</b> Gereğince işlem yapılsın.</div>
+                <div class="sozluk-kart"><b>Bende-i dâ'î:</b> Dua eden kulunuz, köleniz.</div>
                 <div class="sozluk-kart"><b>Mîr-i mîrân:</b> Beylerbeyi unvanı kullanan üst düzey vali.</div>
                 """, unsafe_allow_html=True)
             with col_s2:
                 st.markdown("""
-                <div class="sozluk-kart"><b>Tahrîrat:</b> Resmi dairelerden yazılan devlet mektupları veya yazışmalar.</div>
-                <div class="sozluk-kart"><b>İrâde-i Seniyye:</b> Padişahın bizzat verdiği resmi emir veya buyruk.</div>
+                <div class="sozluk-kart"><b>Tahrîrat:</b> Resmi dairelerden yazılan devlet mektupları.</div>
+                <div class="sozluk-kart"><b>İrâde-i Seniyye:</b> Padişahın bizzat verdiği resmi emir.</div>
                 <div class="sozluk-kart"><b>Hüccet:</b> Mahkeme tarafından verilen şer'i ispat belgesi.</div>
                 """, unsafe_allow_html=True)
         else:
