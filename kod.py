@@ -10,7 +10,7 @@ import easyocr
 import json     
 import requests
 import time 
-import gc # RAM temizliği ve Garbage Collection yönetimi için eklendi
+import gc 
 import torch 
 from PIL import Image, ImageEnhance 
 import google.generativeai as genai 
@@ -203,11 +203,10 @@ def pdf_uret(metin):
             pdf.multi_cell(0, 7, satir)
     return pdf.output()
 
-# 🧠 RAM DOSTU VE BELLEK SIKIŞTIRMALI OCR YÜKLEYİCİ
-@st.cache_resource(max_entries=1) # Sadece tek bir model kopyasını RAM'de tutar
+@st.cache_resource(max_entries=1)
 def ocr_model_yukle():
     gpu_katilimi = torch.cuda.is_available()
-    return easyocr.Reader(['tr', 'ar'], gpu=gpu_katilimi, model_storage_directory=None)
+    return easyocr.Reader(['tr', 'ar'], gpu=gpu_katilimi)
 
 with st.sidebar:
     st.markdown("### 🗄️ Laboratuvar Arşivi")
@@ -229,89 +228,92 @@ with st.sidebar:
     if st.button("🗑️ Geçmişi Temizle"):
         st.session_state.belge_arsivi = {}
         st.session_state.aktif_belge_adi = None
-        # RAM'deki tüm kalıntıları temizle
         gc.collect()
         if torch.cuda.is_available(): torch.cuda.empty_cache()
         st.rerun()
 
-with st.expander("ℹ️ PalaeoLab AI Hızlı Kullanım Kılavuzu (İlk Başlayanlar İçin)", expanded=False):
-    st.markdown("""
-    1.  **Görsel Ön İşleme:** Filtre modu seçip kontrastı ayarlayın.
-    2.  **Belge Yükleme:** Kendi belgenizi yükleyebilir veya **'Örnek Belgelerle Test Et'** sekmesini kullanabilirsiniz.
-    3.  **Arşive Ekleme:** Ayarlar bittiğinde **'Belgeyi Arşive Ekle'** butonuna basın.
-    4.  **Derin Analiz:** Sağ panelden yazı (hat) türünü seçip `Gemini AI` analizini başlatın.
-    """)
+# 🧭 ÜST SEVİYE AKADEMİK NAVİGASYON KATMANI (MULTI-PAGE WORKSPACE)
+sekme_ocr, sekme_gemini, sekme_sozluk = st.tabs([
+    "🔬 1. Belge İşleme ve OCR Odası", 
+    "🧠 2. Gemini Akademik Analiz Paneli", 
+    "📖 3. İnteraktif Sözlük ve Terim Takibi"
+])
 
-st.markdown('<div class="adim-karti">⚡ <b>ADIM 1: Belge İyileştirme ve Yükleme Paneli</b></div>', unsafe_allow_html=True)
-col_ayar, col_yukle = st.columns(2)
+# ==============================================================================
+# 🚪 ODALARIN İÇERİK MİMARİSİ
+# ==============================================================================
+with sekme_ocr:
+    st.markdown('<div class="adim-karti">⚡ <b>Belge İyileştirme ve Yükleme Laboratuvarı</b></div>', unsafe_allow_html=True)
+    col_ayar, col_yukle = st.columns(2)
 
-with col_ayar:
-    st.write("⚙️ **Görsel Ön İşleme Katmanı**")
-    filtre_modu = st.radio("İşlem Modu", ["Renkli (Orijinal)", "Siyah-Beyaz (Yüksek Kontrast)", "Gri Tonlama"], horizontal=True)
-    kontrast_oran = st.slider("Kontrast Seviyesi", 0.5, 3.0, 1.5, 0.1)
-    parlaklik_oran = st.slider("Parlaklık Seviyesi", 0.5, 2.0, 1.0, 0.1)
+    with col_ayar:
+        st.write("⚙️ **Görsel Ön İşleme Katmanı**")
+        filtre_modu = st.radio("İşlem Modu", ["Renkli (Orijinal)", "Siyah-Beyaz (Yüksek Kontrast)", "Gri Tonlama"], horizontal=True)
+        kontrast_oran = st.slider("Kontrast Seviyesi", 0.5, 3.0, 1.5, 0.1)
+        parlaklik_oran = st.slider("Parlaklık Seviyesi", 0.5, 2.0, 1.0, 0.1)
 
-with col_yukle:
-    st.write("📂 **Belge Kaynağı Seçimi**")
-    tab_kendi, tab_ornek = st.tabs(["💻 Kendi Belgemi Yükle", "📚 Örnek Belgelerle Test Et"])
-    yuklenen_dosya, orijinal_gorsel, belge_adi = None, None, None
-    
-    with tab_kendi:
-        yuklenen_dosya = st.file_uploader("Osmanlıca belge görselini yükleyin", type=["png", "jpg", "jpeg"], key="kullanici_dosya")
-        if yuklenen_dosya is not None:
-            orijinal_gorsel = Image.open(yuklenen_dosya)
-            belge_adi = yuklenen_dosya.name
-            
-    with tab_ornek:
-        st.info("Sistemi test etmek için hazır bir arşiv belgesi seçebilirsiniz:")
-        ornek_belge_turu = st.selectbox("Test Belgesi Seçin", ["Seçiniz...", "Örnek 1: Divani Hat ile Yazılmış Ferman", "Örnek 2: Rika Hat ile Yazılmış Sadaret Tahriratı"])
-        ornek_linkler = {
-            "Örnek 1: Divani Hat ile Yazılmış Ferman": "https://wikimedia.org",
-            "Örnek 2: Rika Hat ile Yazılmış Sadaret Tahriratı": "https://wikimedia.org"
-        }
-        if ornek_belge_turu != "Seçiniz...":
-            try:
-                url = ornek_linkler[ornek_belge_turu]
-                response = requests.get(url)
-                orijinal_gorsel = Image.open(BytesIO(response.content))
-                belge_adi = f"Ornek_{ornek_belge_turu.replace(':', '').replace(' ', '_')}.jpg"
-                st.success("✔️ Örnek başarıyla yüklendi.")
-            except:
-                st.error("Örnek yüklenemedi.")
-
-if orijinal_gorsel is not None:
-    islenmis_gorsel = gorsel_iyilestir(orijinal_gorsel, filtre_modu, kontrast_oran, parlaklik_oran)
-    col_orj, col_isl = st.columns(2)
-    with col_orj: st.image(orijinal_gorsel, caption="Kaynak Belge", use_container_width=True)
-    with col_isl: st.image(islenmis_gorsel, caption="İyileştirilmiş Belge", use_container_width=True)
+    with col_yukle:
+        st.write("📂 **Belge Kaynağı Seçimi**")
+        tab_kendi, tab_ornek = st.tabs(["💻 Kendi Belgemi Yükle", "📚 Örnek Belgelerle Test Et"])
+        yuklenen_dosya, orijinal_gorsel, belge_adi = None, None, None
         
-    if st.button("🔮 Belgeyi Arşive Ekle ve Analize Başla", type="primary"):
-        if belge_adi not in st.session_state.belge_arsivi:
-            st.session_state.belge_arsivi[belge_adi] = {"gorsel": islenmis_gorsel, "analiz": None}
-        st.session_state.aktif_belge_adi = belge_adi
-        st.rerun()
+        with tab_kendi:
+            yuklenen_dosya = st.file_uploader("Osmanlıca belge görselini yükleyin", type=["png", "jpg", "jpeg"], key="kullanici_dosya")
+            if yuklenen_dosya is not None:
+                orijinal_gorsel = Image.open(yuklenen_dosya)
+                belge_adi = yuklenen_dosya.name
+                
+        with tab_ornek:
+            st.info("Sistemi test etmek için hazır bir arşiv belgesi seçebilirsiniz:")
+            ornek_belge_turu = st.selectbox("Test Belgesi Seçin", ["Seçiniz...", "Örnek 1: Divani Hat ile Yazılmış Ferman", "Örnek 2: Rika Hat ile Yazılmış Sadaret Tahriratı"])
+            ornek_linkler = {
+                "Örnek 1: Divani Hat ile Yazılmış Ferman": "https://wikimedia.org",
+                "Örnek 2: Rika Hat ile Yazılmış Sadaret Tahriratı": "https://wikimedia.org"
+            }
+            if ornek_belge_turu != "Seçiniz...":
+                try:
+                    url = ornek_linkler[ornek_belge_turu]
+                    response = requests.get(url)
+                    orijinal_gorsel = Image.open(BytesIO(response.content))
+                    belge_adi = f"Ornek_{ornek_belge_turu.replace(':', '').replace(' ', '_')}.jpg"
+                    st.success("✔️ Örnek başarıyla yüklendi.")
+                except:
+                    st.error("Örnek yüklenemedi.")
 
-if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.session_state.belge_arsivi:
-    aktif_veri = st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]
-    st.markdown(f'<div class="adim-karti">🧠 <b>ADIM 2: Analiz Odası</b> (Belge: <code>{st.session_state.aktif_belge_adi}</code>)</div>', unsafe_allow_html=True)
-    col_b1, col_b2 = st.columns(2)
-    
-    with col_b1:
-        if st.button("👁️ EasyOCR ile Ön Karakter Taraması Yap"):
+    if orijinal_gorsel is not None:
+        islenmis_gorsel = gorsel_iyilestir(orijinal_gorsel, filtre_modu, kontrast_oran, parlaklik_oran)
+        col_orj, col_isl = st.columns(2)
+        with col_orj: st.image(orijinal_gorsel, caption="Kaynak Belge", use_container_width=True)
+        with col_isl: st.image(islenmis_gorsel, caption="İyileştirilmiş Belge", use_container_width=True)
+            
+        if st.button("🔮 Belgeyi Arşive Ekle ve İşlemi Başlat", type="primary"):
+            if belge_adi not in st.session_state.belge_arsivi:
+                st.session_state.belge_arsivi[belge_adi] = {"gorsel": islenmis_gorsel, "analiz": None}
+            st.session_state.aktif_belge_adi = belge_adi
+            st.rerun()
+
+    if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.session_state.belge_arsivi:
+        aktif_veri = st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]
+        if st.button("👁️ Seçili Belgeye EasyOCR Ön Karakter Taraması Yap"):
             with st.spinner("Taranıyor..."):
                 reader = ocr_model_yukle()
                 aktif_veri["gorsel"].save("gecici.png")
                 sonuc = reader.readtext("gecici.png", detail=0)
                 if os.path.exists("gecici.png"): os.remove("gecici.png")
                 st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["ocr_ham"] = " ".join(sonuc)
-                # Süreç sonunda RAM boşaltımı tetikle
                 gc.collect()
-                st.success("Ön tarama bitti.")
+                st.success("Ön tarama bitti. Aşağıdaki alandan veya üst sekmelerden sonuçları izleyebilirsiniz.")
+        
+        if "ocr_ham" in aktif_veri and aktif_veri["ocr_ham"]:
+            st.text_area("Yakalana Ham Yazı Katmanı", value=aktif_veri["ocr_ham"], height=150)
 
-    with col_b2:
-        st.write("✒️ **Akademik Hat Türü Spesifikasyonu**")
+with sekme_gemini:
+    if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.session_state.belge_arsivi:
+        aktif_veri = st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]
+        st.markdown(f'<div class="adim-karti">🧠 <b>Yapay Zekâ Deşifre Motoru</b> (Aktif: <code>{st.session_state.aktif_belge_adi}</code>)</div>', unsafe_allow_html=True)
+        
         hat_turu = st.selectbox(
-            "Belgenin Hat (Yazı) Türünü Seçin",
+            "Belgenin Hat (Yazı) Türünü Onaylayın",
             [
                 "Otomatik Tespit (Genel Mod)",
                 "Rika (Resmi Yazışmalar, Jurnaller, Hızlı El Yazısı)",
@@ -322,7 +324,7 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                 "Sülüs / Kufi (Kitabeler, Resmi Başlıklar, Hat Levhaları)"
             ]
         )
-        if st.button("🤖 Gemini AI ile Derin Paleografik Analiz Başlat"):
+        if st.button("🤖 Gemini AI ile Derin Paleografik Analiz Başlat", key="gemini_ana_btn"):
             if "GEMINI_API_KEY" in st.secrets:
                 istek_durumu = st.empty()
                 with st.spinner("Gemini analiz ediyor..."):
@@ -332,7 +334,6 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                         try:
                             model = genai.GenerativeModel('gemini-2.5-flash')
                             b_io = BytesIO()
-                            # Kaliteyi bozmadan görseli bulut RAM'i için hafiflet
                             aktif_veri["gorsel"].save(b_io, format="JPEG", quality=85)
                             gorsel_parca = {"mime_type": "image/jpeg", "data": b_io.getvalue()}
                             
@@ -348,7 +349,6 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                             yanit = model.generate_content([PROMPT, gorsel_parca])
                             st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = yanit.text
                             basari = True
-                            # İşlem bitince RAM ve GPU hafızasını sıfırla
                             gc.collect()
                             if torch.cuda.is_available(): torch.cuda.empty_cache()
                             st.rerun()
@@ -356,7 +356,7 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                         except Exception as e:
                             hata_mesaji = str(e)
                             if "429" in hata_mesaji or "quota" in hata_mesaji.lower():
-                                istek_durumu.warning(f"⏳ Yoğunluk algılandı. {deneme + 1}. deneme öncesi bekleniyor...")
+                                istek_durumu.warning(f"⏳ Yoğunluk algılandı. Bekleniyor...")
                                 time.sleep(5)
                             else:
                                 st.error(f"🛑 Bağlantı Hatası: {hata_mesaji}")
@@ -364,14 +364,26 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                     if not basari: st.error("⚠️ Sunucu yanıt vermedi.")
             else: st.error("API KEY eksik.")
 
-    if "ocr_ham" in aktif_veri and aktif_veri["ocr_ham"]:
-        with st.expander("📝 Ham Metin Katmanı"): st.code(aktif_veri["ocr_ham"])
+        if aktif_veri["analiz"]:
+            st.markdown("### 📊 Üretilen Akademik Rapor")
+            rapor_metni = st.text_area("Düzenlenebilir Çıktı Ekranı", value=aktif_veri["analiz"], height=400)
+            st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = rapor_metni
+            st.write("---")
+            col_d1, col_d2 = st.columns(2)
+            with col_d1:
+                st.download_button(label="📥 Word (.docx) İndir", data=docx_uret(rapor_metni), file_name=f"Rapor_{st.session_state.aktif_belge_adi}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
+            with col_d2:
+                st.download_button(label="📥 PDF (.pdf) İndir", data=pdf_uret(rapor_metni), file_name=f"Rapor_{st.session_state.aktif_belge_adi}.pdf", mime="application/pdf", use_container_width=True)
+    else:
+        st.info("Lütfen öncelikle ilk sekmeden bir belge yükleyin veya arşive ekleyin.")
 
-    if aktif_veri["analiz"]:
-        st.markdown("### 📊 Yapay Zekâ Analiz Raporu")
-        with st.container():
-            st.markdown('<div style="background-color: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 15px;">🔍 <b>Rapor İçi Terim ve Kelime Arama Motoru</b></div>', unsafe_allow_html=True)
-            arama_kelimesi = st.text_input("Metin içinde aramak istediğiniz kelimeyi yazın:", key="kelime_arama_input")
+with sekme_sozluk:
+    if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.session_state.belge_arsivi:
+        aktif_veri = st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]
+        st.markdown('<div class="adim-karti">📖 <b>Leksikografi ve Canlı Terim Arama Katmanı</b></div>', unsafe_allow_html=True)
+        
+        if aktif_veri["analiz"]:
+            arama_kelimesi = st.text_input("Transkripsiyon içinde canlı aramak istediğiniz kelimeyi/terimi yazın:", key="canli_sozluk_arama")
             if arama_kelimesi:
                 satirlar = aktif_veri["analiz"].split('\n')
                 bulunanlar = []
@@ -379,14 +391,27 @@ if st.session_state.aktif_belge_adi and st.session_state.aktif_belge_adi in st.s
                     if arama_kelimesi.lower() in satir.lower():
                         bulunanlar.append(f"**Satır {i+1}:** {satir.replace(arama_kelimesi, f'🛸**{arama_kelimesi}**🛸')}")
                 if bulunanlar:
-                    st.success(f"✔️ Toplam **{len(bulunanlar)}** satırda eşleşme bulundu:")
+                    st.success(f"✔️ Rapor içinde toplam **{len(bulunanlar)}** satırda bu kelime geçiyor:")
                     for s in bulunanlar: st.markdown(s)
-                else: st.warning("⚠️ Kelime bulunamadı.")
-        rapor_metni = st.text_area("Düzenlenebilir Çıktı", value=aktif_veri["analiz"], height=400)
-        st.session_state.belge_arsivi[st.session_state.aktif_belge_adi]["analiz"] = rapor_metni
-        st.write("---")
-        col_d1, col_d2 = st.columns(2)
-        with col_d1:
-            st.download_button(label="📥 Word (.docx) İndir", data=docx_uret(rapor_metni), file_name=f"Rapor_{st.session_state.aktif_belge_adi}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
-        with col_d2:
-            st.download_button(label="📥 PDF (.pdf) İndir", data=pdf_uret(rapor_metni), file_name=f"Rapor_{st.session_state.aktif_belge_adi}.pdf", mime="application/pdf", use_container_width=True)
+                else:
+                    st.warning("⚠️ Kelime analiz raporunda bulunamadı.")
+            
+            st.write("---")
+            st.markdown("#### 📜 Temel Paleografi Kılavuz Sözlüğü")
+            col_s1, col_s2 = st.columns(2)
+            with col_s1:
+                st.markdown("""
+                <div class="sozluk-kart"><b>Mûcebince amel oluna:</b> Gereğince işlem yapılsın (Padişah hatt-ı hümayunlarında geçer).</div>
+                <div class="sozluk-kart"><b>Bende-i dâ'î:</b> Dua eden kulunuz, köleniz (Dilekçelerde imza makamıdır).</div>
+                <div class="sozluk-kart"><b>Mîr-i mîrân:</b> Beylerbeyi unvanı kullanan üst düzey vali.</div>
+                """, unsafe_allow_html=True)
+            with col_s2:
+                st.markdown("""
+                <div class="sozluk-kart"><b>Tahrîrat:</b> Resmi dairelerden yazılan devlet mektupları veya yazışmalar.</div>
+                <div class="sozluk-kart"><b>İrâde-i Seniyye:</b> Padişahın bizzat verdiği resmi emir veya buyruk.</div>
+                <div class="sozluk-kart"><b>Hüccet:</b> Mahkeme tarafından verilen şer'i ispat belgesi.</div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("⚠️ Sözlük alanını canlı kullanabilmek için lütfen ikinci sekmeden 'Gemini AI Analizini' tamamlayın.")
+    else:
+        st.info("Lütfen öncelikle ilk sekmeden bir belge yükleyin.")
